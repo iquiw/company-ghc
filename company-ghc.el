@@ -4,7 +4,7 @@
 
 ;; Author:    Iku Iwasa <iku.iwasa@gmail.com>
 ;; URL:       http://github.com/iquiw/company-ghc
-;; Version:   0.0.0
+;; Version:   0.0.1
 ;; Package-Requires: ((cl-lib "0.5") (company "0.8.0") (ghc "4.1.1") (emacs "24"))
 ;; Keywords:  haskell, completion
 ;; Stability: unstable
@@ -30,6 +30,17 @@
 (require 'company)
 (require 'ghc)
 
+(defgroup company-ghc nil
+  "company-mode back-end for haskell-mode."
+  :group 'company)
+
+(defcustom company-ghc-show-info 'nomodule
+  "Whether to show type info in minibuffer."
+  :type '(choice (const :tag "Off" nil)
+                 (const :tag "Show raw output" t)
+                 (const :tag "Show in oneline" oneline)
+                 (const :tag "Show without module" nomodule)))
+
 (defconst company-ghc-pragma-regexp "{-#[[:space:]]+\\([[:upper:]]+\\>\\|\\)")
 
 (defconst company-ghc-langopt-regexp
@@ -51,6 +62,8 @@
           "\\(?:[[:space:]\n]*[[:word:]]+[[:space:]\n]*,\\)*"
           "[[:space:]\n]*\\([[:word:]]+\\_>\\|\\)"))
 
+(defvar company-ghc-propertized-modules '())
+
 (defun company-ghc-prefix ()
   (let ((ppss (syntax-ppss)))
     (cond
@@ -62,24 +75,55 @@
             (company-grab company-ghc-impspec-regexp 2)
             (company-grab-symbol))))))
 
-(defun company-ghc-candidates (arg)
+(defun company-ghc-candidates (prefix)
   (cond
    ((company-grab company-ghc-impspec-regexp)
     (let ((mod (match-string-no-properties 1)))
       (unless (boundp (ghc-module-symbol mod))
+        (message "load %s" mod)
         (ghc-load-module-buffer))
-      (all-completions arg (ghc-module-keyword mod))))
+      (all-completions prefix (company-ghc-get-module-keywords mod))))
    ((company-grab company-ghc-import-regexp)
-    (all-completions arg ghc-module-names))
+    (all-completions prefix ghc-module-names))
    ((company-grab company-ghc-pragma-regexp)
-    (all-completions arg ghc-pragma-names))
+    (all-completions prefix ghc-pragma-names))
    ((company-grab company-ghc-langopt-regexp)
     (if (string-equal (match-string-no-properties 1) "LANGUAGE")
         (all-completions (match-string-no-properties 2)
                          ghc-language-extensions)
       (all-completions (match-string-no-properties 2)
                        ghc-option-flags)))
-   (t (all-completions arg ghc-merged-keyword))))
+   (t (all-completions prefix
+                       (if (member "dummy" company-ghc-propertized-modules)
+                           ghc-merged-keyword
+                         (push "dummy" company-ghc-propertized-modules)
+                         (mapcar (lambda (k) (company-ghc-set-module k "dummy"))
+                                 ghc-merged-keyword))))))
+
+(defun company-ghc-meta (candidate)
+  (when (company-ghc-get-module candidate)
+    (let ((info (ghc-get-info candidate)))
+      (pcase company-ghc-show-info
+        (`t info)
+        (`oneline (replace-regexp-in-string "\n" "" info))
+        (`nomodule (replace-regexp-in-string
+                    "\t.*" "" (replace-regexp-in-string "\n" "" info)))))))
+
+(defun company-ghc-get-module-keywords (mod)
+  (if (and (boundp (ghc-module-symbol mod))
+           (not (member mod company-ghc-propertized-modules)))
+      (progn
+        (push mod company-ghc-propertized-modules)
+        (mapcar (lambda (k) (company-ghc-set-module k mod))
+                (ghc-module-keyword mod)))
+    (ghc-module-keyword mod)))
+
+(defun company-ghc-get-module (s)
+  (get-text-property 0 'company-ghc-module s))
+
+(defun company-ghc-set-module (s mod)
+  (put-text-property 0 (length s) 'company-ghc-module mod s)
+  s)
 
 ;;;###autoload
 (defun company-ghc (command &optional arg &rest ignored)
@@ -90,6 +134,7 @@
     (prefix (and (derived-mode-p 'haskell-mode)
                  (company-ghc-prefix)))
     (candidates (company-ghc-candidates arg))
+    (meta (company-ghc-meta arg))
     (sorted t)))
 
 (provide 'company-ghc)
