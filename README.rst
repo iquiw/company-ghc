@@ -1,6 +1,13 @@
 =============
  Company GHC
 =============
+
+.. contents:: Table of Contents
+.. sectnum::
+
+Overview
+========
+
 | `Company-mode`_ completion back-end for `haskell-mode`_ via `ghc-mod`_.
 | It runs when the major mode is derived from `haskell-mode`_.
 
@@ -28,47 +35,55 @@ Setup
 
 Feature
 =======
+
+Completion
+----------
 The following completions are available.
 
 1. Pragma names. (``ghc-pragma-names``)
 
    .. image:: images/pragma.png
-      :width: 350px
       :alt: Completion for pragma
 
 2. Language extensions. (``ghc-language-extensions``)
 
    .. image:: images/language.png
-      :width: 350px
       :alt: Completion for language extensions
 
 3. GHC option flags. (``ghc-options-flags``)
 
    .. image:: images/option.png
-      :width: 350px
       :alt: Completion for GHC options
 
 4. Import module names. (``ghc-modules-names``)
 
    .. image:: images/module.png
-      :width: 350px
       :alt: Completion for import modules
 
 5. Variables and functions in import spec. (``ghc-module-keyword``)
 
    .. image:: images/impspec.png
-      :width: 350px
       :alt: Completion for import specs
 
 6. Keywords. (``ghc-merged-keywords``)
 
+   **This will be replaced by keywords of loaded modules in future.**
+
    .. image:: images/keyword.png
-      :width: 350px
       :alt: Completion for keywords
+
+Show type info in minibuffer
+----------------------------
+If ``company-ghc-show-info`` is ``t``, ``oneline`` or ``nomodule``,
+then type info of completion candidate is displayed in minibuffer
+by ``ghc-mod info``.
+
+.. image:: images/showinfo.png
+   :alt: Show info in minibuffer (``nomodule``)
 
 TODO
 ====
-* Show type in minibuffer.
+* Show module name as annotation.
 * Context sensitive completion for qualified imported keywords.
 
 License
