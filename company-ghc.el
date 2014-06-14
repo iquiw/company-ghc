@@ -35,11 +35,15 @@
   :group 'company)
 
 (defcustom company-ghc-show-info 'nomodule
-  "Whether to show type info in minibuffer."
+  "Specify how to show type info in minibuffer."
   :type '(choice (const :tag "Off" nil)
                  (const :tag "Show raw output" t)
                  (const :tag "Show in oneline" oneline)
                  (const :tag "Show without module" nomodule)))
+
+(defcustom company-ghc-show-module t
+  "Non-nil to show module name as annotation."
+  :type 'boolean)
 
 (defconst company-ghc-pragma-regexp "{-#[[:space:]]+\\([[:upper:]]+\\>\\|\\)")
 
@@ -63,6 +67,7 @@
           "[[:space:]\n]*\\([[:word:]]+\\_>\\|\\)"))
 
 (defvar company-ghc-propertized-modules '())
+(defvar company-ghc-imported-modules '())
 
 (defun company-ghc-prefix ()
   (let ((ppss (syntax-ppss)))
@@ -79,8 +84,6 @@
   (cond
    ((company-grab company-ghc-impspec-regexp)
     (let ((mod (match-string-no-properties 1)))
-      (unless (boundp (ghc-module-symbol mod))
-        (ghc-load-module-buffer))
       (all-completions prefix (company-ghc-get-module-keywords mod))))
    ((company-grab company-ghc-import-regexp)
     (all-completions prefix ghc-module-names))
@@ -92,12 +95,12 @@
                          ghc-language-extensions)
       (all-completions (match-string-no-properties 2)
                        ghc-option-flags)))
-   (t (all-completions prefix
-                       (if (member "dummy" company-ghc-propertized-modules)
-                           ghc-merged-keyword
-                         (push "dummy" company-ghc-propertized-modules)
-                         (mapcar (lambda (k) (company-ghc-set-module k "dummy"))
-                                 ghc-merged-keyword))))))
+   (t (sort (apply 'append
+                   (mapcar
+                    (lambda (mod)
+                      (all-completions prefix (company-ghc-get-module-keywords mod)))
+                    company-ghc-imported-modules))
+            'string<))))
 
 (defun company-ghc-meta (candidate)
   (when (company-ghc-get-module candidate)
@@ -108,14 +111,20 @@
         (`nomodule (replace-regexp-in-string
                     "\t.*" "" (replace-regexp-in-string "\n" "" info)))))))
 
+(defun company-ghc-annotation (candidate)
+  (when company-ghc-show-module
+    (company-ghc-get-module candidate)))
+
 (defun company-ghc-get-module-keywords (mod)
-  (if (and (boundp (ghc-module-symbol mod))
-           (not (member mod company-ghc-propertized-modules)))
-      (progn
+  (let ((sym (ghc-module-symbol mod)))
+    (unless (boundp sym)
+      (ghc-load-merge-modules (list mod)))
+    (when (boundp sym)
+      (unless (member mod company-ghc-propertized-modules)
         (push mod company-ghc-propertized-modules)
         (mapcar (lambda (k) (company-ghc-set-module k mod))
                 (ghc-module-keyword mod)))
-    (ghc-module-keyword mod)))
+      (ghc-module-keyword mod))))
 
 (defun company-ghc-get-module (s)
   (get-text-property 0 'company-ghc-module s))
@@ -124,16 +133,28 @@
   (put-text-property 0 (length s) 'company-ghc-module mod s)
   s)
 
+(defun company-ghc-scan-modules ()
+  (when (derived-mode-p 'haskell-mode)
+    ;; TODO: write own module parser
+    (setq company-ghc-imported-modules
+          (cons "Prelude" (ghc-gather-import-modules-buffer)))))
+
+(add-hook 'after-save-hook 'company-ghc-scan-modules)
+
+
 ;;;###autoload
 (defun company-ghc (command &optional arg &rest ignored)
   "`company-mode' completion back-end for `haskell-mode' via ghc-mod."
   (interactive (list 'interactive))
   (cl-case command
+    (init (make-variable-buffer-local 'company-ghc-imported-modules)
+          (company-ghc-scan-modules))
     (interactive (company-begin-backend 'company-ghc))
     (prefix (and (derived-mode-p 'haskell-mode)
                  (company-ghc-prefix)))
     (candidates (company-ghc-candidates arg))
     (meta (company-ghc-meta arg))
+    (annotation (company-ghc-annotation arg))
     (sorted t)))
 
 (provide 'company-ghc)
