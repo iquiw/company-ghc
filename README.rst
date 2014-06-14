@@ -65,25 +65,27 @@ The following completions are available.
    .. image:: images/impspec.png
       :alt: Completion for import specs
 
-6. Keywords. (``ghc-merged-keywords``)
-
-   **This will be replaced by keywords of loaded modules in future.**
+6. Keywords from imported modules.
 
    .. image:: images/keyword.png
-      :alt: Completion for keywords
+      :alt: Completion for keywords of imported modules
 
 Show type info in minibuffer
 ----------------------------
-If ``company-ghc-show-info`` is ``t``, ``oneline`` or ``nomodule``,
-then type info of completion candidate is displayed in minibuffer
-by ``ghc-mod info``.
+* If ``company-ghc-show-info`` is ``t``, ``oneline`` or ``nomodule``,
+  then type info of completion candidate is displayed in minibuffer
+  by ``ghc-mod info``.
 
-.. image:: images/showinfo.png
-   :alt: Show info in minibuffer (``nomodule``)
+  .. image:: images/showinfo.png
+     :alt: Show info in minibuffer (``nomodule``)
+
+Show module name as annotation
+------------------------------
+* Module name is displayed as completion annotation
+  if ``company-ghc-show-module`` is non-nil (default) as in the above images.
 
 TODO
 ====
-* Show module name as annotation.
 * Context sensitive completion for qualified imported keywords.
 
 License
