@@ -80,7 +80,6 @@
    ((company-grab company-ghc-impspec-regexp)
     (let ((mod (match-string-no-properties 1)))
       (unless (boundp (ghc-module-symbol mod))
-        (message "load %s" mod)
         (ghc-load-module-buffer))
       (all-completions prefix (company-ghc-get-module-keywords mod))))
    ((company-grab company-ghc-import-regexp)
