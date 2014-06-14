@@ -68,6 +68,7 @@
 
 (defvar company-ghc-propertized-modules '())
 (defvar company-ghc-imported-modules '())
+(make-variable-buffer-local 'company-ghc-imported-modules)
 
 (defun company-ghc-prefix ()
   (let ((ppss (syntax-ppss)))
@@ -120,11 +121,11 @@
     (unless (boundp sym)
       (ghc-load-merge-modules (list mod)))
     (when (boundp sym)
-      (unless (member mod company-ghc-propertized-modules)
+      (if (member mod company-ghc-propertized-modules)
+          (ghc-module-keyword mod)
         (push mod company-ghc-propertized-modules)
         (mapcar (lambda (k) (company-ghc-set-module k mod))
-                (ghc-module-keyword mod)))
-      (ghc-module-keyword mod))))
+                (ghc-module-keyword mod))))))
 
 (defun company-ghc-get-module (s)
   (get-text-property 0 'company-ghc-module s))
@@ -147,8 +148,7 @@
   "`company-mode' completion back-end for `haskell-mode' via ghc-mod."
   (interactive (list 'interactive))
   (cl-case command
-    (init (make-variable-buffer-local 'company-ghc-imported-modules)
-          (company-ghc-scan-modules))
+    (init (company-ghc-scan-modules))
     (interactive (company-begin-backend 'company-ghc))
     (prefix (and (derived-mode-p 'haskell-mode)
                  (company-ghc-prefix)))
