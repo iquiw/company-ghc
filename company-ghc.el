@@ -104,13 +104,16 @@
             'string<))))
 
 (defun company-ghc-meta (candidate)
-  (when (company-ghc-get-module candidate)
-    (let ((info (ghc-get-info candidate)))
-      (pcase company-ghc-show-info
-        (`t info)
-        (`oneline (replace-regexp-in-string "\n" "" info))
-        (`nomodule (replace-regexp-in-string
-                    "\t.*" "" (replace-regexp-in-string "\n" "" info)))))))
+  (let ((mod (company-ghc-get-module candidate)))
+    (when mod
+      (let ((info (ghc-get-info (concat mod "." candidate))))
+        (pcase company-ghc-show-info
+          (`t info)
+          (`oneline (replace-regexp-in-string "\n" "" info))
+          (`nomodule
+           (when (string-match "\\(?:[^[:space:]]+\\.\\)?\\([^\t]+\\)\t" info)
+             (replace-regexp-in-string "\n" ""
+                                       (match-string-no-properties 1 info)))))))))
 
 (defun company-ghc-annotation (candidate)
   (when company-ghc-show-module
