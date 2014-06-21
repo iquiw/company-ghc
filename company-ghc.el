@@ -77,9 +77,7 @@
      ((nth 4 ppss) (or
                     (company-grab company-ghc-pragma-regexp 1)
                     (company-grab company-ghc-langopt-regexp 2)))
-     (t (or (company-grab company-ghc-import-regexp 1)
-            (company-grab company-ghc-impspec-regexp 2)
-            (company-grab-symbol))))))
+     (t (company-grab-symbol)))))
 
 (defun company-ghc-candidates (prefix)
   (cond
