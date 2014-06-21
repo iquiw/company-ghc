@@ -87,6 +87,8 @@ Show module name as annotation
 TODO
 ====
 * Context sensitive completion for qualified imported keywords.
+* Support doc-buffer using `haskell-docs`_
+* Write unit test.
 
 License
 =======
@@ -95,3 +97,4 @@ Licensed under the GPL 3+ license.
 .. _company-mode: http://company-mode.github.io/
 .. _haskell-mode: https://github.com/haskell/haskell-mode
 .. _ghc-mod: http://www.mew.org/~kazu/proj/ghc-mod/en/
+.. _haskell-docs: https://github.com/chrisdone/haskell-docs
