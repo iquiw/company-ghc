@@ -4,7 +4,7 @@
 
 ;; Author:    Iku Iwasa <iku.iwasa@gmail.com>
 ;; URL:       http://github.com/iquiw/company-ghc
-;; Version:   0.0.2
+;; Version:   0.0.3
 ;; Package-Requires: ((cl-lib "0.5") (company "0.8.0") (ghc "4.1.1") (emacs "24"))
 ;; Keywords:  haskell, completion
 ;; Stability: unstable
@@ -66,6 +66,8 @@
           "\\(?:[[:space:]\n]*[[:word:]]+[[:space:]\n]*,\\)*"
           "[[:space:]\n]*\\([[:word:]]+\\_>\\|\\)"))
 
+(defconst company-ghc-module-regexp "module[[:space:]]*\\([[:word:].]+\\_>\\|\\)")
+
 (defvar company-ghc-propertized-modules '())
 (defvar company-ghc-imported-modules '())
 (make-variable-buffer-local 'company-ghc-imported-modules)
@@ -84,16 +86,23 @@
    ((company-grab company-ghc-impspec-regexp)
     (let ((mod (match-string-no-properties 1)))
       (all-completions prefix (company-ghc-get-module-keywords mod))))
+
    ((company-grab company-ghc-import-regexp)
-    (all-completions prefix ghc-module-names))
+    (all-completions (match-string-no-properties 1) ghc-module-names))
+
+   ((company-grab company-ghc-module-regexp)
+    (all-completions (match-string-no-properties 1) ghc-module-names))
+
    ((company-grab company-ghc-pragma-regexp)
     (all-completions prefix ghc-pragma-names))
+
    ((company-grab company-ghc-langopt-regexp)
     (if (string-equal (match-string-no-properties 1) "LANGUAGE")
         (all-completions (match-string-no-properties 2)
                          ghc-language-extensions)
       (all-completions (match-string-no-properties 2)
                        ghc-option-flags)))
+
    (t (sort (apply 'append
                    (mapcar
                     (lambda (mod)
