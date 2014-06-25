@@ -66,7 +66,8 @@
           "\\(?:[[:space:]\n]*[[:word:]]+[[:space:]\n]*,\\)*"
           "[[:space:]\n]*\\([[:word:]]+\\_>\\|\\)"))
 
-(defconst company-ghc-module-regexp "module[[:space:]]*\\([[:word:].]+\\_>\\|\\)")
+(defconst company-ghc-module-regexp
+  "module[[:space:]]*\\([[:word:].]+\\_>\\|\\)")
 
 (defvar company-ghc-propertized-modules '())
 (defvar company-ghc-imported-modules '())
@@ -119,12 +120,12 @@
           (`oneline (replace-regexp-in-string "\n" "" info))
           (`nomodule
            (when (string-match "\\(?:[^[:space:]]+\\.\\)?\\([^\t]+\\)\t" info)
-             (replace-regexp-in-string "\n" ""
-                                       (match-string-no-properties 1 info)))))))))
+             (replace-regexp-in-string
+              "\n" "" (match-string-no-properties 1 info)))))))))
 
 (defun company-ghc-annotation (candidate)
   (when company-ghc-show-module
-    (company-ghc-get-module candidate)))
+    (concat " " (company-ghc-get-module candidate))))
 
 (defun company-ghc-get-module-keywords (mod)
   (let ((sym (ghc-module-symbol mod)))
