@@ -90,6 +90,17 @@ Show module name as annotation
 * Module name is displayed as completion annotation
   if ``company-ghc-show-module`` is non-nil (default) as in the above images.
 
+Note
+====
+Currently, company-ghc treats all symbols as completion prefix.
+This means other back-ends after company-ghc have no chance to provide completion candidates in haskell-mode.
+
+As of now, if you want to use other back-ends with company-ghc, use grouped back-end like below.
+
+.. code:: emacs-lisp
+
+   (add-to-list 'company-backends '(company-ghc company-dabbrev))
+
 TODO
 ====
 * Context sensitive completion for qualified imported keywords.
