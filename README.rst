@@ -22,11 +22,17 @@ Depends
 
 Setup
 -----
-1. Install from Git::
+1. Install from `MELPA`_::
+
+     M-x package-install RET company-ghc RET
+
+   or install from Git::
 
      git clone https://github.com/iquiw/company-ghc.git
 
-2. Add ``company-ghc`` to ``company-backends`` after loading `company-mode`_ and `ghc-mod`_::
+2. Add ``company-ghc`` to ``company-backends`` after loading `company-mode`_ and `ghc-mod`_
+
+   .. code:: emacs-lisp
 
      (add-to-list 'load-path "/path/to/company-ghc")
      (require 'company-ghc)
@@ -98,3 +104,4 @@ Licensed under the GPL 3+ license.
 .. _haskell-mode: https://github.com/haskell/haskell-mode
 .. _ghc-mod: http://www.mew.org/~kazu/proj/ghc-mod/en/
 .. _haskell-docs: https://github.com/chrisdone/haskell-docs
+.. _MELPA: http://melpa.milkbox.net/
