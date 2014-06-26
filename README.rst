@@ -99,7 +99,7 @@ As of now, if you want to use other back-ends with company-ghc, use grouped back
 
 .. code:: emacs-lisp
 
-   (add-to-list 'company-backends '(company-ghc company-dabbrev))
+   (add-to-list 'company-backends '(company-ghc :with company-dabbrev))
 
 TODO
 ====
