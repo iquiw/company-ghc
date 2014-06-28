@@ -4,7 +4,7 @@
 
 ;; Author:    Iku Iwasa <iku.iwasa@gmail.com>
 ;; URL:       http://github.com/iquiw/company-ghc
-;; Version:   0.0.3
+;; Version:   0.0.4
 ;; Package-Requires: ((cl-lib "0.5") (company "0.8.0") (ghc "4.1.1") (emacs "24"))
 ;; Keywords:  haskell, completion
 ;; Stability: unstable
@@ -80,6 +80,7 @@
      ((nth 4 ppss) (or
                     (company-grab company-ghc-pragma-regexp 1)
                     (company-grab company-ghc-langopt-regexp 2)))
+     ((looking-back "^[^[:space:]]*") nil)
      (t (company-grab-symbol)))))
 
 (defun company-ghc-candidates (prefix)
