@@ -20,13 +20,22 @@ Depends
 * `company-mode`_
 * `ghc-mod`_
 
-Setup
------
+Setup from MELPA_
+-----------------
 1. Install from `MELPA`_::
 
      M-x package-install RET company-ghc RET
 
-   or install from Git::
+
+2. Add ``company-ghc`` to ``company-backends`` after loading `company-mode`_ and `ghc-mod`_
+
+   .. code:: emacs-lisp
+
+     (add-to-list 'company-backends 'company-ghc)
+
+Setup from Git
+--------------
+1. Install from Git::
 
      git clone https://github.com/iquiw/company-ghc.git
 
@@ -35,7 +44,6 @@ Setup
    .. code:: emacs-lisp
 
      (add-to-list 'load-path "/path/to/company-ghc")
-     (require 'company-ghc)
      (add-to-list 'company-backends 'company-ghc)
 
 
