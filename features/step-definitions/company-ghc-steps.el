@@ -13,3 +13,47 @@
 (Then "^company-ghc prefix none$"
       (lambda ()
         (should (not company-ghc-test-prefix-output))))
+
+(When "^I execute company-ghc-candidates at current point"
+      (lambda ()
+        (let ((prefix (company-ghc-prefix)))
+          (when (and prefix (not (eq prefix 'stop)))
+            (setq company-ghc-test-candidates-output
+                  (mapcar (lambda (s) (substring-no-properties s))
+                          (company-ghc-candidates prefix)))))))
+
+(Then "^company-ghc candidates are\\(?: \"\\(.*\\)\"\\|:\\)$"
+      (lambda (expected)
+        (should (equal company-ghc-test-candidates-output (read expected)))))
+
+(Given "^these GHC pragmas\\(?: \"\\(.+\\)\"\\|:\\)$"
+       (lambda (words)
+         (setq ghc-pragma-names (split-string words "[[:space:]\n]+"))))
+
+(Given "^these GHC language extensions\\(?: \"\\(.+\\)\"\\|:\\)$"
+       (lambda (words)
+         (setq ghc-language-extensions (split-string words "[[:space:]\n]+"))))
+
+(Given "^these GHC option flags\\(?: \"\\(.+\\)\"\\|:\\)"
+       (lambda (words)
+         (setq ghc-option-flags (split-string words "[[:space:]\n]+"))))
+
+(Given "^these GHC modules\\(?: \"\\(.+\\)\"\\|:\\)"
+       (lambda (words)
+         (setq ghc-module-names (split-string words "[[:space:]\n]+"))))
+;;
+;; Given these module keywords:
+;;   | module          | keywords                     |
+;;   | Data.Text       | Text singleton splitOn       |
+;;   | Data.ByteString | ByteString singleton splitAt |
+;;
+(Given "^these module keywords:"
+       (lambda (table)
+         (let ((rows (cdr table)))
+           (dolist (row rows)
+             (set (ghc-module-symbol (car row))
+                  (split-string (cadr row) "[[:space:]\n]+"))))))
+
+(Given "^these imported modules\\(?: \"\\(.+\\)\"\\|:\\)$"
+       (lambda (words)
+         (setq company-ghc-imported-modules (split-string words "[[:space:]\n]+"))))

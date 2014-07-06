@@ -113,7 +113,6 @@ TODO
 ====
 * Context sensitive completion for qualified imported keywords.
 * Support doc-buffer using `haskell-docs`_
-* Write unit test.
 
 License
 =======
