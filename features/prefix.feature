@@ -2,7 +2,7 @@ Feature: company-ghc prefix
 
   Scenario: Pragma prefix
     Given the buffer is empty
-    And I insert:
+    When I insert:
     """
     {-# SomePrefix
     """
@@ -11,7 +11,7 @@ Feature: company-ghc prefix
 
   Scenario: LANGUAGE prefix
     Given the buffer is empty
-    And I insert:
+    When I insert:
     """
     {-# LANGUAGE SomeFeature
     """
@@ -19,7 +19,7 @@ Feature: company-ghc prefix
     Then company-ghc prefix is "SomeFeature"
 
     Given the buffer is empty
-    And I insert:
+    When I insert:
     """
     {-# LANGUAGE SomeFeature, AnotherFeature
     """
@@ -28,7 +28,7 @@ Feature: company-ghc prefix
 
   Scenario: OPTIONS_GHC prefix
     Given the buffer is empty
-    And I insert:
+    When I insert:
     """
     {-# OPTIONS_GHC -fSomeOption
     """
@@ -36,7 +36,7 @@ Feature: company-ghc prefix
     Then company-ghc prefix is "-fSomeOption"
 
     Given the buffer is empty
-    And I insert:
+    When I insert:
     """
     {-# OPTIONS_GHC -fSomeOption, AnotherOption
     """
@@ -45,7 +45,7 @@ Feature: company-ghc prefix
 
   Scenario: Import module prefix
     Given the buffer is empty
-    And I insert:
+    When I insert:
     """
     import Some.Module
     """
@@ -53,16 +53,16 @@ Feature: company-ghc prefix
     Then company-ghc prefix is "Some.Module"
 
     Given the buffer is empty
-    And I insert:
+    When I insert:
     """
-    import safe qualified \"package\" Some.Module
+    import safe qualified "package" Some.Module
     """
     And I execute company-ghc-prefix at current point
     Then company-ghc prefix is "Some.Module"
 
   Scenario: Imported variable prefix
     Given the buffer is empty
-    And I insert:
+    When I insert:
     """
     import Some.Module (SomeVar
     """
@@ -70,7 +70,7 @@ Feature: company-ghc prefix
     Then company-ghc prefix is "SomeVar"
 
     Given the buffer is empty
-    And I insert:
+    When I insert:
     """
     import Some.Module (SomeVar, AnotherVar
     """
@@ -78,9 +78,9 @@ Feature: company-ghc prefix
     Then company-ghc prefix is "AnotherVar"
 
     Given the buffer is empty
-    And I insert:
+    When I insert:
     """
-    import safe qualified \"package\" Some.Module ( SomeVar
+    import safe qualified "package" Some.Module ( SomeVar
                                                   , AnotherVar
     """
     And I execute company-ghc-prefix at current point
@@ -88,7 +88,7 @@ Feature: company-ghc prefix
 
   Scenario: Keyword prefix
     Given the buffer is empty
-    And I insert:
+    When I insert:
     """
     main = do
         someFunc
@@ -98,7 +98,7 @@ Feature: company-ghc prefix
 
   Scenario: Stopping prefix
     Given the buffer is empty
-    And I insert:
+    When I insert:
     """
     main = do
         putStrLn "someFunc  "
@@ -109,7 +109,7 @@ Feature: company-ghc prefix
 
   Scenario: No prefix
     Given the buffer is empty
-    And I insert:
+    When I insert:
     """
     someLocalFunc
     """
