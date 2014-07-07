@@ -56,4 +56,39 @@
 
 (Given "^these imported modules\\(?: \"\\(.+\\)\"\\|:\\)$"
        (lambda (words)
-         (setq company-ghc-imported-modules (split-string words "[[:space:]\n]+"))))
+         (setq company-ghc-imported-modules
+               (split-string words "[[:space:]\n]+"))))
+
+(Given "^the haskell buffer template"
+       (lambda ()
+         (erase-buffer)
+         (insert "{-# LANGUAGE OverloadedStrings #-}\n
+module Main where
+
+@IMPORT@
+
+foo :: IO ()
+foo = 1
+
+main :: IO ()
+main = do
+   putStrLn \"Hello\"
+   return ()
+")))
+
+(When "^I replace template \"\\(.+\\)\" by\\(?: \"\\(.*\\)\"\\|:\\)$"
+      (lambda (tmpl var)
+        (save-excursion
+          (goto-char (point-min))
+          (when (re-search-forward (concat "\\_<@" tmpl "@\\_>"))
+            (delete-region (match-beginning 0) (match-end 0))
+            (insert var)))))
+
+(When "^I execute company-ghc-scan-modules$"
+      (lambda ()
+        (setq company-ghc-test-imported-modules (company-ghc-scan-modules))))
+
+(Then "^scanned modules are\\(?: \"\\(.*\\)\"\\|:\\)$"
+      (lambda (words)
+        (should (equal company-ghc-test-imported-modules
+                       (split-string words "[[:space:]\n]+")))))
