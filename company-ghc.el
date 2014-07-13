@@ -4,10 +4,10 @@
 
 ;; Author:    Iku Iwasa <iku.iwasa@gmail.com>
 ;; URL:       https://github.com/iquiw/company-ghc
-;; Version:   0.0.4
+;; Version:   0.0.5
 ;; Package-Requires: ((cl-lib "0.5") (company "0.8.0") (ghc "4.1.1") (emacs "24"))
 ;; Keywords:  haskell, completion
-;; Stability: unstable
+;; Stability: experimental
 
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

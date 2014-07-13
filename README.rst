@@ -20,6 +20,10 @@ Depends
 * `company-mode`_
 * `ghc-mod`_
 
+Optional Dependency
+-------------------
+* `hoogle`_ command and its database (``hoogle database``) for doc-buffer support.
+
 Setup from MELPA_
 -----------------
 1. Install from `MELPA`_::
@@ -98,6 +102,14 @@ Show module name as annotation
 * Module name is displayed as completion annotation
   if ``company-ghc-show-module`` is non-nil (default) as in the above images.
 
+Display Hoogle document as doc-buffer
+-------------------------------------
+* If `hoogle`_ is installed and its database is prepared,
+  then pressing ``<f1>`` displays hoogle searched documentation in the doc-buffer.
+
+  .. image:: images/doc-buffer.png
+     :alt: Display documentation in docbuffer
+
 Note
 ====
 Currently, company-ghc treats all symbols as completion prefix.
@@ -112,7 +124,7 @@ As of now, if you want to use other back-ends with company-ghc, use grouped back
 TODO
 ====
 * Context sensitive completion for qualified imported keywords.
-* Support doc-buffer using `haskell-docs`_
+* Support doc-buffer using `haskell-docs`_ (`hoogle`_ support is available).
 
 License
 =======
@@ -122,4 +134,5 @@ Licensed under the GPL 3+ license.
 .. _haskell-mode: https://github.com/haskell/haskell-mode
 .. _ghc-mod: http://www.mew.org/~kazu/proj/ghc-mod/en/
 .. _haskell-docs: https://github.com/chrisdone/haskell-docs
+.. _hoogle: https://hackage.haskell.org/package/hoogle
 .. _MELPA: http://melpa.milkbox.net/
