@@ -138,6 +138,19 @@
              (replace-regexp-in-string
               "\n" "" (match-string-no-properties 1 info)))))))))
 
+(defun company-ghc-doc-buffer (candidate)
+  "Display documentation in the docbuffer for the given CANDIDATE."
+  (with-temp-buffer
+    (erase-buffer)
+    (let ((hoogle (if (boundp 'haskell-hoogle-command)
+                      haskell-hoogle-command
+                    "hoogle"))
+          (mod (company-ghc-get-module candidate)))
+      (call-process "hoogle" nil t nil "search" "--info"
+                    (if mod (concat mod "." candidate) candidate)))
+    (company-doc-buffer
+     (buffer-substring-no-properties (point-min) (point-max)))))
+
 (defun company-ghc-annotation (candidate)
   "Show module name as annotation where the given CANDIDATE is defined."
   (when company-ghc-show-module
@@ -186,6 +199,7 @@ Provide completion info according to COMMAND and ARG.  IGNORED, not used."
                  (company-ghc-prefix)))
     (candidates (company-ghc-candidates arg))
     (meta (company-ghc-meta arg))
+    (doc-buffer (company-ghc-doc-buffer arg))
     (annotation (company-ghc-annotation arg))
     (sorted t)))
 
