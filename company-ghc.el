@@ -85,6 +85,7 @@
 (make-variable-buffer-local 'company-ghc-imported-modules)
 
 (defun company-ghc-prefix ()
+  "Provide completion prefix at the current point."
   (let ((ppss (syntax-ppss)))
     (cond
      ((nth 3 ppss) 'stop)
@@ -95,6 +96,7 @@
      (t (company-grab-symbol)))))
 
 (defun company-ghc-candidates (prefix)
+  "Provide completion candidates for the given PREFIX."
   (cond
    ((company-grab company-ghc-impspec-regexp)
     (let ((mod (match-string-no-properties 1)))
@@ -124,6 +126,7 @@
             'string<))))
 
 (defun company-ghc-meta (candidate)
+  "Show type info for the given CANDIDATE."
   (let ((mod (company-ghc-get-module candidate)))
     (when mod
       (let ((info (ghc-get-info (concat mod "." candidate))))
@@ -136,10 +139,12 @@
               "\n" "" (match-string-no-properties 1 info)))))))))
 
 (defun company-ghc-annotation (candidate)
+  "Show module name as annotation where the given CANDIDATE is defined."
   (when company-ghc-show-module
     (concat " " (company-ghc-get-module candidate))))
 
 (defun company-ghc-get-module-keywords (mod)
+  "Get defined keywords in the specified module MOD."
   (let ((sym (ghc-module-symbol mod)))
     (unless (boundp sym)
       (ghc-load-merge-modules (list mod)))
@@ -151,13 +156,16 @@
                 (ghc-module-keyword mod))))))
 
 (defun company-ghc-get-module (s)
+  "Get module name from the keyword S."
   (get-text-property 0 'company-ghc-module s))
 
 (defun company-ghc-set-module (s mod)
+  "Set module name of the keywork S to the module MOD."
   (put-text-property 0 (length s) 'company-ghc-module mod s)
   s)
 
 (defun company-ghc-scan-modules ()
+  "Scan imported modules in the current buffer."
   (when (derived-mode-p 'haskell-mode)
     ;; TODO: write own module parser
     (setq company-ghc-imported-modules
@@ -168,7 +176,8 @@
 
 ;;;###autoload
 (defun company-ghc (command &optional arg &rest ignored)
-  "`company-mode' completion back-end for `haskell-mode' via ghc-mod."
+  "`company-mode' completion back-end for `haskell-mode' via ghc-mod.
+Provide completion info according to COMMAND and ARG.  IGNORED, not used."
   (interactive (list 'interactive))
   (cl-case command
     (init (company-ghc-scan-modules))
