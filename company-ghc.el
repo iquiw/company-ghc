@@ -222,7 +222,7 @@ continues or not."
   "Search start of import decl and return the point after import and offset."
   (catch 'result
     (while (re-search-forward "^\\([[:space:]]*\\)import\\>" nil t)
-      (unless (nth 4 (syntax-ppss))
+      (unless (company-ghc--in-comment-p)
         (throw 'result
                (cons (match-end 0)
                      (string-width (match-string-no-properties 1))))))))
