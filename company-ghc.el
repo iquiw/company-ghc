@@ -70,7 +70,7 @@
           "\\(?:\"[^\"]+\"[[:space:]\n]+\\)?"
           "\\([[:word:].]+\\_>\\|\\)"))
 
-(defconst company-ghc-impspec-regexp
+(defconst company-ghc-impdecl-regexp
   (concat company-ghc-import-regexp
           "\\(?:[[:space:]\n]+as[[:space:]\n]+\\w+\\)?"
           "[[:space:]\n]*\\(?:hiding[[:space:]\n]\\)*("
@@ -98,7 +98,7 @@
 (defun company-ghc-candidates (prefix)
   "Provide completion candidates for the given PREFIX."
   (cond
-   ((company-grab company-ghc-impspec-regexp)
+   ((company-grab company-ghc-impdecl-regexp)
     (let ((mod (match-string-no-properties 1)))
       (all-completions prefix (company-ghc-get-module-keywords mod))))
 
@@ -183,7 +183,7 @@
   (save-excursion
     (goto-char (point-min))
     (let (mod (mod-alist '(("Prelude"))))
-      (while (setq mod (company-ghc--scan-impspec))
+      (while (setq mod (company-ghc--scan-impdecl))
         (when (consp mod)
           (setq mod-alist
                 (cons
@@ -193,7 +193,7 @@
                    mod-alist)))))
       (setq company-ghc-imported-modules mod-alist))))
 
-(defun company-ghc--scan-impspec ()
+(defun company-ghc--scan-impdecl ()
   "Scan one import spec and return module alias cons.
 If proper import spec is not found, return boolean value whether import spec
 continues or not."
@@ -219,7 +219,7 @@ continues or not."
               (string= (cdr end) "import")))))))
 
 (defun company-ghc--search-import-start ()
-  "Search start of import spec and return the point after import and offset."
+  "Search start of import decl and return the point after import and offset."
   (catch 'result
     (while (re-search-forward "^\\([[:space:]]*\\)import\\>" nil t)
       (unless (nth 4 (syntax-ppss))
@@ -228,7 +228,8 @@ continues or not."
                      (string-width (match-string-no-properties 1))))))))
 
 (defun company-ghc--search-import-end (offset)
-  "Search end of import spec and return the end point and next token."
+  "Search end of import decl and return the end point and next token.
+If the line is less offset than OFFSET, it finishes the search."
   (forward-line)
   (catch 'result
     (let ((p (point)))
