@@ -1,4 +1,4 @@
-(When "^I execute company-ghc-prefix at current point"
+(When "^I execute company-ghc-prefix at current point$"
       (lambda ()
         (setq company-ghc-test-prefix-output (company-ghc-prefix))))
 
@@ -14,7 +14,7 @@
       (lambda ()
         (should (not company-ghc-test-prefix-output))))
 
-(When "^I execute company-ghc-candidates at current point"
+(When "^I execute company-ghc-candidates at current point$"
       (lambda ()
         (let ((prefix (company-ghc-prefix)))
           (when (and prefix (not (eq prefix 'stop)))
@@ -34,11 +34,11 @@
        (lambda (words)
          (setq ghc-language-extensions (split-string words "[[:space:]\n]+"))))
 
-(Given "^these GHC option flags\\(?: \"\\(.+\\)\"\\|:\\)"
+(Given "^these GHC option flags\\(?: \"\\(.+\\)\"\\|:\\)$"
        (lambda (words)
          (setq ghc-option-flags (split-string words "[[:space:]\n]+"))))
 
-(Given "^these GHC modules\\(?: \"\\(.+\\)\"\\|:\\)"
+(Given "^these GHC modules\\(?: \"\\(.+\\)\"\\|:\\)$"
        (lambda (words)
          (setq ghc-module-names (split-string words "[[:space:]\n]+"))))
 ;;
@@ -47,20 +47,31 @@
 ;;   | Data.Text       | Text singleton splitOn       |
 ;;   | Data.ByteString | ByteString singleton splitAt |
 ;;
-(Given "^these module keywords:"
+(Given "^these module keywords:$"
        (lambda (table)
          (let ((rows (cdr table)))
            (dolist (row rows)
              (set (ghc-module-symbol (car row))
                   (split-string (cadr row) "[[:space:]\n]+"))))))
 
-(Given "^these imported modules\\(?: \"\\(.+\\)\"\\|:\\)$"
-       (lambda (words)
-         (setq company-ghc-imported-modules
-               (mapcar (lambda (s) (cons s nil))
-                       (split-string words "[[:space:]\n]+")))))
+;;
+;; Given these imported modules:
+;;   | module          | alias |
+;;   | Data.Text       | T     |
+;;   | Data.ByteString |       |
+;;
+(Given "^these imported modules:$"
+       (lambda (table)
+         (let ((rows (cdr table)))
+           (setq company-ghc-imported-modules
+                 (mapcar
+                  (lambda (row)
+                    (let ((mod (car row))
+                          (alias (cadr row)))
+                      (cons mod (if (string= alias "") nil alias))))
+                  rows)))))
 
-(Given "^the haskell buffer template"
+(Given "^the haskell buffer template$"
        (lambda ()
          (erase-buffer)
          (insert "{-# LANGUAGE OverloadedStrings #-}\n

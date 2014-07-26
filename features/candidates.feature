@@ -226,7 +226,11 @@ Feature: company-ghc candidates
 
   Scenario: Loaded modules keyword candidates
     Given the buffer is empty
-    Given these imported modules "Data.Text System.IO"
+    And these imported modules:
+      | module    | alias |
+      | Data.Text |       |
+      | System.IO |       |
+
     When I insert:
     """
     main = do
@@ -242,5 +246,57 @@ Feature: company-ghc candidates
     "stdin"
     "stdout"
     "strip"
+    )
+    """
+
+  Scenario: Qualified imported keyword candidates
+    Given the buffer is empty
+    And these imported modules:
+      | module          | alias           |
+      | Data.Text       | T               |
+      | Data.ByteString | Data.ByteString |
+      | System.IO       |                 |
+
+    When I insert:
+    """
+    foo = T.
+    """
+    And I execute company-ghc-candidates at current point
+    Then company-ghc candidates are:
+    """
+    (
+    "Text"
+    "singleton"
+    "splitOn"
+    "strip"
+    )
+    """
+
+    Given the buffer is empty
+    When I insert:
+    """
+    foo = T.s
+    """
+    And I execute company-ghc-candidates at current point
+    Then company-ghc candidates are:
+    """
+    (
+    "singleton"
+    "splitOn"
+    "strip"
+    )
+    """
+
+    Given the buffer is empty
+    When I insert:
+    """
+    foo = Data.ByteString.s
+    """
+    And I execute company-ghc-candidates at current point
+    Then company-ghc candidates are:
+    """
+    (
+    "singleton"
+    "splitAt"
     )
     """
