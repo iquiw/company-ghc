@@ -4,7 +4,7 @@
 
 ;; Author:    Iku Iwasa <iku.iwasa@gmail.com>
 ;; URL:       https://github.com/iquiw/company-ghc
-;; Version:   0.0.5
+;; Version:   0.0.6
 ;; Package-Requires: ((cl-lib "0.5") (company "0.8.0") (ghc "4.1.1") (emacs "24"))
 ;; Keywords:  haskell, completion
 ;; Stability: experimental
@@ -181,9 +181,90 @@
 (defun company-ghc-scan-modules ()
   "Scan imported modules in the current buffer."
   (when (derived-mode-p 'haskell-mode)
-    ;; TODO: write own module parser
-    (setq company-ghc-imported-modules
-          (cons "Prelude" (ghc-gather-import-modules-buffer)))))
+    (save-excursion
+      (goto-char (point-min))
+      (let (mod (mod-alist '()))
+        (while (setq mod (company-ghc--scan-impspec))
+          (when (consp mod)
+            (setq mod-alist
+                  (cons
+                   mod
+                   (if (and (assoc-string (car mod) mod-alist) (cdr mod))
+                       (delete (assoc-string (car mod) mod-alist) mod-alist)
+                     mod-alist)))))
+        (setq company-ghc-imported-modules
+              (cons "Prelude" (mapcar 'car mod-alist)))))))
+
+(defun company-ghc--scan-impspec ()
+  "Scan one import spec and return module alias cons.
+If proper import spec is not found, return boolean value whether import spec
+continues or not."
+  (let* ((beg (company-ghc--search-import-start))
+         (end (and beg (company-ghc--search-import-end (cdr beg)))))
+    (when end
+      (save-restriction
+        (narrow-to-region (car beg) (car end))
+        (goto-char (point-min))
+        (let (chunk prev-chunk attrs mod)
+          (while (setq chunk (company-ghc--next-import-chunk))
+            (cond
+             ((string= chunk "qualified") (push 'qualified attrs))
+             ((string= chunk "safe") (push 'safe attrs))
+             ((let ((case-fold-search nil)) (string-match-p "^[A-Z]" chunk))
+              (cond
+               ((not mod) (setq mod (if (memq 'qualified attrs)
+                                        (cons chunk chunk)
+                                      (cons chunk nil))))
+               ((string= prev-chunk "as") (setcdr mod chunk)))))
+            (setq prev-chunk chunk))
+          (or mod
+              (string= (cdr end) "import")))))))
+
+(defun company-ghc--search-import-start ()
+  "Search start of import spec and return the point after import and offset."
+  (catch 'result
+    (while (re-search-forward "^\\([[:space:]]*\\)import\\>" nil t)
+      (unless (nth 4 (syntax-ppss))
+        (throw 'result
+               (cons (match-end 0)
+                     (string-width (match-string-no-properties 1))))))))
+
+(defun company-ghc--search-import-end (offset)
+  "Search end of import spec and return the end point and next token."
+  (forward-line)
+  (catch 'result
+    (let ((p (point)))
+      (while (not (eobp))
+        (cond
+         ((company-ghc--in-comment-p) nil)
+         ((looking-at "^[[:space:]]*$") nil)
+         ((looking-at "^#") nil)
+         ((not (and (looking-at "^\\([[:space:]]*\\)\\([^[:space:]\n]*\\)")
+                    (< offset (string-width (match-string-no-properties 1)))))
+          (throw 'result (cons p (match-string-no-properties 2)))))
+        (forward-line)
+        (setq p (point))))))
+
+(defun company-ghc--next-import-chunk ()
+  "Return next chunk in the current import spec."
+  (catch 'result
+    (while (and (skip-chars-forward " \t\n") (not (eobp)))
+      (cond
+       ((or (looking-at-p "{-") (looking-at-p "--"))
+        (forward-comment 1))
+       ((looking-at-p "(")
+        (throw 'result (buffer-substring-no-properties
+                        (point) (progn (forward-sexp) (point)))))
+       ((looking-at-p "\"")
+        (re-search-forward "\"\\([^\"]\\|\\\\\"\\)*\"")
+        (throw 'result (match-string-no-properties 0)))
+       (t
+        (when (re-search-forward "\\=.[[:alnum:].]*\\>" nil t)
+          (throw 'result (match-string-no-properties 0))))))))
+
+(defun company-ghc--in-comment-p ()
+  "Return whether the point is in comment or not."
+  (let ((ppss (syntax-ppss))) (nth 4 ppss)))
 
 (add-hook 'haskell-mode-hook
           (lambda ()
