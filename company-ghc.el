@@ -147,7 +147,7 @@
                       haskell-hoogle-command
                     "hoogle"))
           (mod (company-ghc-get-module candidate)))
-      (call-process "hoogle" nil t nil "search" "--info"
+      (call-process hoogle nil t nil "search" "--info"
                     (if mod (concat mod "." candidate) candidate)))
     (company-doc-buffer
      (buffer-substring-no-properties (point-min) (point-max)))))
