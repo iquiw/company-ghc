@@ -4,7 +4,7 @@
 
 ;; Author:    Iku Iwasa <iku.iwasa@gmail.com>
 ;; URL:       https://github.com/iquiw/company-ghc
-;; Version:   0.0.6
+;; Version:   0.0.7
 ;; Package-Requires: ((cl-lib "0.5") (company "0.8.0") (ghc "4.1.1") (emacs "24"))
 ;; Keywords:  haskell, completion
 ;; Stability: experimental
@@ -180,20 +180,19 @@
 
 (defun company-ghc-scan-modules ()
   "Scan imported modules in the current buffer."
-  (when (derived-mode-p 'haskell-mode)
-    (save-excursion
-      (goto-char (point-min))
-      (let (mod (mod-alist '()))
-        (while (setq mod (company-ghc--scan-impspec))
-          (when (consp mod)
-            (setq mod-alist
-                  (cons
-                   mod
-                   (if (and (assoc-string (car mod) mod-alist) (cdr mod))
-                       (delete (assoc-string (car mod) mod-alist) mod-alist)
-                     mod-alist)))))
-        (setq company-ghc-imported-modules
-              (cons "Prelude" (mapcar 'car mod-alist)))))))
+  (save-excursion
+    (goto-char (point-min))
+    (let (mod (mod-alist '()))
+      (while (setq mod (company-ghc--scan-impspec))
+        (when (consp mod)
+          (setq mod-alist
+                (cons
+                 mod
+                 (if (and (assoc-string (car mod) mod-alist) (cdr mod))
+                     (delete (assoc-string (car mod) mod-alist) mod-alist)
+                   mod-alist)))))
+      (setq company-ghc-imported-modules
+            (cons "Prelude" (mapcar 'car mod-alist))))))
 
 (defun company-ghc--scan-impspec ()
   "Scan one import spec and return module alias cons.
@@ -266,10 +265,6 @@ continues or not."
   "Return whether the point is in comment or not."
   (let ((ppss (syntax-ppss))) (nth 4 ppss)))
 
-(add-hook 'haskell-mode-hook
-          (lambda ()
-            (add-hook 'after-save-hook 'company-ghc-scan-modules nil t)))
-
 
 ;;;###autoload
 (defun company-ghc (command &optional arg &rest ignored)
@@ -277,7 +272,9 @@ continues or not."
 Provide completion info according to COMMAND and ARG.  IGNORED, not used."
   (interactive (list 'interactive))
   (cl-case command
-    (init (company-ghc-scan-modules))
+    (init (when (derived-mode-p 'haskell-mode)
+            (company-ghc-scan-modules)
+            (add-hook 'after-save-hook 'company-ghc-scan-modules nil t)))
     (interactive (company-begin-backend 'company-ghc))
     (prefix (and (derived-mode-p 'haskell-mode)
                  (company-ghc-prefix)))
