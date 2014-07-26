@@ -67,7 +67,7 @@ module Main where
 
 @IMPORT@
 
-foo :: IO ()
+foo :: Int
 foo = 1
 
 main :: IO ()

@@ -9,7 +9,7 @@ Feature: company-ghc scan modules
     """
     And I execute company-ghc-scan-modules
     # Prelude always added
-    Then scanned modules are "Prelude System.IO"
+    Then scanned modules are "System.IO Prelude"
 
     Given the haskell buffer template
     When I replace template "IMPORT" by:
@@ -19,7 +19,7 @@ Feature: company-ghc scan modules
     """
     And I execute company-ghc-scan-modules
     # Prelude always added
-    Then scanned modules are "Prelude System.IO Data.Text"
+    Then scanned modules are "System.IO Data.Text Prelude"
 
     Given the haskell buffer template
     When I replace template "IMPORT" by ""
@@ -35,7 +35,7 @@ Feature: company-ghc scan modules
     import qualified Data.Text
     """
     And I execute company-ghc-scan-modules
-    Then scanned modules are "Prelude Data.Text"
+    Then scanned modules are "Data.Text Prelude"
 
     Given the haskell buffer template
     When I replace template "IMPORT" by:
@@ -44,7 +44,7 @@ Feature: company-ghc scan modules
     import qualified Data.Text.Lazy as TL
     """
     And I execute company-ghc-scan-modules
-    Then scanned modules are "Prelude Data.Text.Lazy Data.Text"
+    Then scanned modules are "Data.Text.Lazy Data.Text Prelude"
 
   @ghc-mod
   Scenario: Scan selective import
@@ -56,7 +56,7 @@ Feature: company-ghc scan modules
     import Data.ByteString hiding (splitAt)
     """
     And I execute company-ghc-scan-modules
-    Then scanned modules are "Prelude Data.ByteString Data.Text Control.Monad"
+    Then scanned modules are "Data.ByteString Data.Text Control.Monad Prelude"
 
 
   Scenario: Scan safe import
@@ -67,7 +67,7 @@ Feature: company-ghc scan modules
     import safe qualified Data.Monoid
     """
     And I execute company-ghc-scan-modules
-    Then scanned modules are "Prelude Data.Monoid Control.Applicative"
+    Then scanned modules are "Data.Monoid Control.Applicative Prelude"
 
   Scenario: Scan package import
     Given the haskell buffer template
@@ -77,7 +77,7 @@ Feature: company-ghc scan modules
     import safe qualified "mtl" Control.Monad.State as State
     """
     And I execute company-ghc-scan-modules
-    Then scanned modules are "Prelude Control.Monad.State Control.Monad.Trans"
+    Then scanned modules are "Control.Monad.State Control.Monad.Trans Prelude"
 
   Scenario: Scan import with newline
     Given the haskell buffer template
@@ -98,7 +98,7 @@ Feature: company-ghc scan modules
         )
     """
     And I execute company-ghc-scan-modules
-    Then scanned modules are "Prelude Data.ByteString Data.Text"
+    Then scanned modules are "Data.ByteString Data.Text Prelude"
 
   @ghc-mod
   Scenario: Scan incomplete import
@@ -111,7 +111,7 @@ Feature: company-ghc scan modules
     import Control.Monad
     """
     And I execute company-ghc-scan-modules
-    Then scanned modules are "Prelude Control.Monad Control.Applicative"
+    Then scanned modules are "Control.Monad Control.Applicative Prelude"
 
   Scenario: Not scan import in string,comment
     Given the haskell buffer template

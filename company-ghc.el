@@ -182,7 +182,7 @@
   "Scan imported modules in the current buffer."
   (save-excursion
     (goto-char (point-min))
-    (let (mod (mod-alist '()))
+    (let (mod (mod-alist '(("Prelude"))))
       (while (setq mod (company-ghc--scan-impspec))
         (when (consp mod)
           (setq mod-alist
@@ -191,8 +191,7 @@
                  (if (and (assoc-string (car mod) mod-alist) (cdr mod))
                      (delete (assoc-string (car mod) mod-alist) mod-alist)
                    mod-alist)))))
-      (setq company-ghc-imported-modules
-            (cons "Prelude" (mapcar 'car mod-alist))))))
+      (setq company-ghc-imported-modules (mapcar 'car mod-alist)))))
 
 (defun company-ghc--scan-impspec ()
   "Scan one import spec and return module alias cons.
