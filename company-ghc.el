@@ -121,7 +121,8 @@
    (t (sort (apply 'append
                    (mapcar
                     (lambda (mod)
-                      (all-completions prefix (company-ghc-get-module-keywords mod)))
+                      (all-completions
+                       prefix (company-ghc-get-module-keywords mod)))
                     company-ghc-imported-modules))
             'string<))))
 
@@ -184,7 +185,9 @@
     (setq company-ghc-imported-modules
           (cons "Prelude" (ghc-gather-import-modules-buffer)))))
 
-(add-hook 'after-save-hook 'company-ghc-scan-modules)
+(add-hook 'haskell-mode-hook
+          (lambda ()
+            (add-hook 'after-save-hook 'company-ghc-scan-modules nil t)))
 
 
 ;;;###autoload
