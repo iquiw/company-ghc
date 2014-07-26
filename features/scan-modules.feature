@@ -77,7 +77,7 @@ Feature: company-ghc scan modules
     import safe qualified "mtl" Control.Monad.State as State
     """
     And I execute company-ghc-scan-modules
-    Then scanned modules are "Prelude Control.Monad.Trans"
+    Then scanned modules are "Prelude Control.Monad.State Control.Monad.Trans"
 
   Scenario: Scan import with newline
     Given the haskell buffer template
