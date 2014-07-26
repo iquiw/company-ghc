@@ -22,7 +22,7 @@ Depends
 
 Optional Dependency
 -------------------
-* `hoogle`_ command and its database (``hoogle database``) for doc-buffer support.
+* `hoogle`_ command and its database (``hoogle data``) for doc-buffer support.
 
 Setup from MELPA_
 -----------------
