@@ -123,7 +123,7 @@
                     (lambda (mod)
                       (all-completions
                        prefix (company-ghc-get-module-keywords mod)))
-                    company-ghc-imported-modules))
+                    (mapcar 'car company-ghc-imported-modules)))
             'string<))))
 
 (defun company-ghc-meta (candidate)
@@ -191,7 +191,7 @@
                  (if (and (assoc-string (car mod) mod-alist) (cdr mod))
                      (delete (assoc-string (car mod) mod-alist) mod-alist)
                    mod-alist)))))
-      (setq company-ghc-imported-modules (mapcar 'car mod-alist)))))
+      (setq company-ghc-imported-modules mod-alist))))
 
 (defun company-ghc--scan-impspec ()
   "Scan one import spec and return module alias cons.

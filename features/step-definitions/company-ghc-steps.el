@@ -57,7 +57,8 @@
 (Given "^these imported modules\\(?: \"\\(.+\\)\"\\|:\\)$"
        (lambda (words)
          (setq company-ghc-imported-modules
-               (split-string words "[[:space:]\n]+"))))
+               (mapcar (lambda (s) (cons s nil))
+                       (split-string words "[[:space:]\n]+")))))
 
 (Given "^the haskell buffer template"
        (lambda ()
@@ -89,6 +90,5 @@ main = do
         (setq company-ghc-test-imported-modules (company-ghc-scan-modules))))
 
 (Then "^scanned modules are\\(?: \"\\(.*\\)\"\\|:\\)$"
-      (lambda (words)
-        (should (equal company-ghc-test-imported-modules
-                       (split-string words "[[:space:]\n]+")))))
+      (lambda (expected)
+        (should (equal company-ghc-test-imported-modules (read expected)))))
