@@ -151,9 +151,11 @@ If INDEX is non-nil, matched group of the index is returned as cdr."
 
 (defun company-ghc-meta (candidate)
   "Show type info for the given CANDIDATE."
-  (let ((mod (company-ghc--get-module candidate)))
-    (when mod
-      (let ((info (ghc-get-info (concat mod "." candidate))))
+  (let* ((mod (company-ghc--get-module candidate))
+         (pair (and mod (assoc-string mod company-ghc--imported-modules)))
+         (qualifier (or (and pair (cdr pair)) mod)))
+    (when qualifier
+      (let ((info (ghc-get-info (concat qualifier "." candidate))))
         (pcase company-ghc-show-info
           (`t info)
           (`oneline (replace-regexp-in-string "\n" "" info))
