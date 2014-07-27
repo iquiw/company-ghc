@@ -131,12 +131,12 @@ Feature: company-ghc scan modules
     import
     import Control.Applicative
     import
-    import Control.Monad
+    import Control.
     """
     And I execute company-ghc-scan-modules
     Then scanned modules are:
     """
-    (("Control.Monad") ("Control.Applicative") ("Prelude"))
+    (("Control.") ("Control.Applicative") ("Prelude"))
     """
 
   Scenario: Not scan import in string,comment

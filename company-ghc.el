@@ -4,7 +4,7 @@
 
 ;; Author:    Iku Iwasa <iku.iwasa@gmail.com>
 ;; URL:       https://github.com/iquiw/company-ghc
-;; Version:   0.0.7
+;; Version:   0.0.8
 ;; Package-Requires: ((cl-lib "0.5") (company "0.8.0") (ghc "4.1.1") (emacs "24"))
 ;; Keywords:  haskell, completion
 ;; Stability: experimental
@@ -288,7 +288,7 @@ If the line is less offset than OFFSET, it finishes the search."
         (re-search-forward "\"\\([^\"]\\|\\\\\"\\)*\"")
         (throw 'result (match-string-no-properties 0)))
        (t
-        (when (re-search-forward "\\=.[[:alnum:].]*\\>" nil t)
+        (when (re-search-forward "\\=.[[:alnum:].]*\\_>" nil t)
           (throw 'result (match-string-no-properties 0))))))))
 
 (defun company-ghc--in-comment-p ()
