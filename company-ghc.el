@@ -257,9 +257,9 @@ If the line is less offset than OFFSET, it finishes the search."
        ((looking-at-p "\"")
         (re-search-forward "\"\\([^\"]\\|\\\\\"\\)*\"")
         (throw 'result (match-string-no-properties 0)))
-       (t
-        (when (re-search-forward "\\=.[[:alnum:].]*\\_>" nil t)
-          (throw 'result (match-string-no-properties 0))))))))
+       ((re-search-forward "\\=.[[:alnum:].]*\\_>" nil t)
+        (throw 'result (match-string-no-properties 0)))
+       (t (throw 'result nil))))))
 
 (defun company-ghc--in-comment-p ()
   "Return whether the point is in comment or not."
