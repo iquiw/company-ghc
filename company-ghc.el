@@ -142,18 +142,12 @@ If INDEX is non-nil, matched group of the index is returned as cdr."
       (all-completions prefix (company-ghc--get-module-keywords mod)))
     (`(module) (all-completions prefix ghc-module-names))
     (`(qualified . ,alias)
-     (let ((pair (rassoc alias company-ghc--imported-modules)))
-       (when pair
-         (all-completions prefix
-                          (company-ghc--get-module-keywords (car pair))))))
+     (let ((mods (company-ghc--list-modules-by-alias alias)))
+       (company-ghc--gather-candidates prefix mods)))
     (`(keyword)
-     (sort (apply 'append
-                   (mapcar
-                    (lambda (mod)
-                      (all-completions
-                       prefix (company-ghc--get-module-keywords mod)))
-                    (mapcar 'car company-ghc--imported-modules)))
-            'string<))))
+     (company-ghc--gather-candidates
+      prefix
+      (mapcar 'car company-ghc--imported-modules)))))
 
 (defun company-ghc-meta (candidate)
   "Show type info for the given CANDIDATE."
@@ -185,6 +179,17 @@ If INDEX is non-nil, matched group of the index is returned as cdr."
   "Show module name as annotation where the given CANDIDATE is defined."
   (when company-ghc-show-module
     (concat " " (company-ghc--get-module candidate))))
+
+(defun company-ghc--gather-candidates (prefix mods)
+  "Gather all candidates from the keywords in MODS and return them sorted."
+  (when mods
+    (sort (apply 'append
+                 (mapcar
+                  (lambda (mod)
+                    (all-completions
+                     prefix (company-ghc--get-module-keywords mod)))
+                  mods))
+          'string<)))
 
 (defun company-ghc--get-module-keywords (mod)
   "Get defined keywords in the specified module MOD."
@@ -295,6 +300,12 @@ If the line is less offset than OFFSET, it finishes the search."
   "Return whether the point is in comment or not."
   (let ((ppss (syntax-ppss))) (nth 4 ppss)))
 
+(defun company-ghc--list-modules-by-alias (alias)
+  "Return list of imported modules that have ALIAS."
+  (let (mods)
+    (cl-dolist (pair company-ghc--imported-modules mods)
+      (when (string= (cdr pair) alias)
+        (setq mods (cons (car pair) mods))))))
 
 ;;;###autoload
 (defun company-ghc (command &optional arg &rest ignored)

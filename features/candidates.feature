@@ -167,6 +167,7 @@ Feature: company-ghc candidates
       | module          | keywords                               |
       | Predule         | head readFile splitAt tail writeFile   |
       | Data.Text       | Text singleton splitOn strip           |
+      | Data.Text.IO    | readFile writeFile                     |
       | Data.ByteString | ByteString singleton splitAt           |
       | System.IO       | readFile stderr stdin stdout writeFile |
 
@@ -254,6 +255,7 @@ Feature: company-ghc candidates
     And these imported modules:
       | module          | alias           |
       | Data.Text       | T               |
+      | Data.Text.IO    | T               |
       | Data.ByteString | Data.ByteString |
       | System.IO       |                 |
 
@@ -266,9 +268,11 @@ Feature: company-ghc candidates
     """
     (
     "Text"
+    "readFile"
     "singleton"
     "splitOn"
     "strip"
+    "writeFile"
     )
     """
 
