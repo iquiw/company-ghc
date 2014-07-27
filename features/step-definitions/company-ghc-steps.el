@@ -63,7 +63,7 @@
 (Given "^these imported modules:$"
        (lambda (table)
          (let ((rows (cdr table)))
-           (setq company-ghc-imported-modules
+           (setq company-ghc--imported-modules
                  (mapcar
                   (lambda (row)
                     (let ((mod (car row))

@@ -85,9 +85,9 @@
    "\\_<\\([[:upper:]][[:alnum:].]*\\)\\."
    "\\([[:word:]]+\\_>\\|\\)"))
 
-(defvar company-ghc-propertized-modules '())
-(defvar company-ghc-imported-modules '())
-(make-variable-buffer-local 'company-ghc-imported-modules)
+(defvar company-ghc--propertized-modules '())
+(defvar company-ghc--imported-modules '())
+(make-variable-buffer-local 'company-ghc--imported-modules)
 
 (defvar company-ghc--prefix-attr)
 (defun company-ghc--set-prefix-attr (candtype &optional index)
@@ -139,25 +139,25 @@ If INDEX is non-nil, matched group of the index is returned as cdr."
     (`(langopt . "LANGUAGE") (all-completions prefix ghc-language-extensions))
     (`(langopt . "OPTIONS_GHC") (all-completions prefix ghc-option-flags))
     (`(impspec . ,mod)
-      (all-completions prefix (company-ghc-get-module-keywords mod)))
+      (all-completions prefix (company-ghc--get-module-keywords mod)))
     (`(module) (all-completions prefix ghc-module-names))
     (`(qualified . ,alias)
-     (let ((pair (rassoc alias company-ghc-imported-modules)))
+     (let ((pair (rassoc alias company-ghc--imported-modules)))
        (when pair
          (all-completions prefix
-                          (company-ghc-get-module-keywords (car pair))))))
+                          (company-ghc--get-module-keywords (car pair))))))
     (`(keyword)
      (sort (apply 'append
                    (mapcar
                     (lambda (mod)
                       (all-completions
-                       prefix (company-ghc-get-module-keywords mod)))
-                    (mapcar 'car company-ghc-imported-modules)))
+                       prefix (company-ghc--get-module-keywords mod)))
+                    (mapcar 'car company-ghc--imported-modules)))
             'string<))))
 
 (defun company-ghc-meta (candidate)
   "Show type info for the given CANDIDATE."
-  (let ((mod (company-ghc-get-module candidate)))
+  (let ((mod (company-ghc--get-module candidate)))
     (when mod
       (let ((info (ghc-get-info (concat mod "." candidate))))
         (pcase company-ghc-show-info
@@ -175,7 +175,7 @@ If INDEX is non-nil, matched group of the index is returned as cdr."
     (let ((hoogle (if (boundp 'haskell-hoogle-command)
                       haskell-hoogle-command
                     "hoogle"))
-          (mod (company-ghc-get-module candidate)))
+          (mod (company-ghc--get-module candidate)))
       (call-process hoogle nil t nil "search" "--info"
                     (if mod (concat mod "." candidate) candidate)))
     (company-doc-buffer
@@ -184,25 +184,25 @@ If INDEX is non-nil, matched group of the index is returned as cdr."
 (defun company-ghc-annotation (candidate)
   "Show module name as annotation where the given CANDIDATE is defined."
   (when company-ghc-show-module
-    (concat " " (company-ghc-get-module candidate))))
+    (concat " " (company-ghc--get-module candidate))))
 
-(defun company-ghc-get-module-keywords (mod)
+(defun company-ghc--get-module-keywords (mod)
   "Get defined keywords in the specified module MOD."
   (let ((sym (ghc-module-symbol mod)))
     (unless (boundp sym)
       (ghc-load-merge-modules (list mod)))
     (when (boundp sym)
-      (if (member mod company-ghc-propertized-modules)
+      (if (member mod company-ghc--propertized-modules)
           (ghc-module-keyword mod)
-        (push mod company-ghc-propertized-modules)
-        (mapcar (lambda (k) (company-ghc-set-module k mod))
+        (push mod company-ghc--propertized-modules)
+        (mapcar (lambda (k) (company-ghc--set-module k mod))
                 (ghc-module-keyword mod))))))
 
-(defun company-ghc-get-module (s)
+(defun company-ghc--get-module (s)
   "Get module name from the keyword S."
   (get-text-property 0 'company-ghc-module s))
 
-(defun company-ghc-set-module (s mod)
+(defun company-ghc--set-module (s mod)
   "Set module name of the keywork S to the module MOD."
   (put-text-property 0 (length s) 'company-ghc-module mod s)
   s)
@@ -220,7 +220,7 @@ If INDEX is non-nil, matched group of the index is returned as cdr."
                  (if (and (assoc-string (car mod) mod-alist) (cdr mod))
                      (delete (assoc-string (car mod) mod-alist) mod-alist)
                    mod-alist)))))
-      (setq company-ghc-imported-modules mod-alist))))
+      (setq company-ghc--imported-modules mod-alist))))
 
 (defun company-ghc--scan-impdecl ()
   "Scan one import spec and return module alias cons.
