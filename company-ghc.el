@@ -80,45 +80,74 @@
 (defconst company-ghc-module-regexp
   "module[[:space:]]*\\([[:word:].]+\\_>\\|\\)")
 
+(defconst company-ghc-qualified-keyword-regexp
+  (concat
+   "\\_<\\([[:upper:]][[:alnum:].]*\\)\\."
+   "\\([[:word:]]+\\_>\\|\\)"))
+
 (defvar company-ghc-propertized-modules '())
 (defvar company-ghc-imported-modules '())
 (make-variable-buffer-local 'company-ghc-imported-modules)
+
+(defvar company-ghc--prefix-attr)
+(defun company-ghc--set-prefix-attr (candtype &optional index)
+  "Set `company-ghc--prefix-attr' to CANDTYPE and optional match string.
+If INDEX is non-nil, matched group of the index is returned as cdr."
+  (setq company-ghc--prefix-attr
+        (cons candtype (when index (match-string-no-properties index)))))
 
 (defun company-ghc-prefix ()
   "Provide completion prefix at the current point."
   (let ((ppss (syntax-ppss)))
     (cond
      ((nth 3 ppss) 'stop)
-     ((nth 4 ppss) (or
-                    (company-grab company-ghc-pragma-regexp 1)
-                    (company-grab company-ghc-langopt-regexp 2)))
+     ((nth 4 ppss)
+      (cond
+       ((company-grab company-ghc-pragma-regexp)
+        (company-ghc--set-prefix-attr 'pragma)
+        (match-string-no-properties 1))
+       ((company-grab company-ghc-langopt-regexp)
+        (company-ghc--set-prefix-attr 'langopt 1)
+        (match-string-no-properties 2))))
+
      ((looking-back "^[^[:space:]]*") nil)
-     (t (company-grab-symbol)))))
+
+     ((company-grab company-ghc-impdecl-regexp)
+      (company-ghc--set-prefix-attr 'impspec 1)
+      (match-string-no-properties 2))
+
+     ((company-grab company-ghc-import-regexp)
+      (company-ghc--set-prefix-attr 'module)
+      (match-string-no-properties 1))
+
+     ((company-grab company-ghc-module-regexp)
+      (company-ghc--set-prefix-attr 'module)
+      (match-string-no-properties 1))
+
+     ((let ((case-fold-search nil))
+        (looking-back company-ghc-qualified-keyword-regexp))
+      (company-ghc--set-prefix-attr 'qualified 1)
+      (match-string-no-properties 2))
+
+     (t (company-ghc--set-prefix-attr 'keyword)
+        (company-grab-symbol)))))
 
 (defun company-ghc-candidates (prefix)
   "Provide completion candidates for the given PREFIX."
-  (cond
-   ((company-grab company-ghc-impdecl-regexp)
-    (let ((mod (match-string-no-properties 1)))
-      (all-completions prefix (company-ghc-get-module-keywords mod))))
-
-   ((company-grab company-ghc-import-regexp)
-    (all-completions (match-string-no-properties 1) ghc-module-names))
-
-   ((company-grab company-ghc-module-regexp)
-    (all-completions (match-string-no-properties 1) ghc-module-names))
-
-   ((company-grab company-ghc-pragma-regexp)
-    (all-completions prefix ghc-pragma-names))
-
-   ((company-grab company-ghc-langopt-regexp)
-    (if (string-equal (match-string-no-properties 1) "LANGUAGE")
-        (all-completions (match-string-no-properties 2)
-                         ghc-language-extensions)
-      (all-completions (match-string-no-properties 2)
-                       ghc-option-flags)))
-
-   (t (sort (apply 'append
+  (pcase company-ghc--prefix-attr
+    (`(pragma) (all-completions prefix ghc-pragma-names))
+    (`(langopt . "LANGUAGE") (all-completions prefix ghc-language-extensions))
+    (`(langopt . "OPTIONS_GHC") (all-completions prefix ghc-option-flags))
+    (`(impspec . ,mod)
+      (all-completions prefix (company-ghc-get-module-keywords mod)))
+    (`(module) (all-completions prefix ghc-module-names))
+    (`(qualified . ,alias)
+     (let ((pair (rassoc alias company-ghc-imported-modules)))
+       (when pair
+         (all-completions prefix
+                          (company-ghc-get-module-keywords (car pair))))))
+    (`(keyword)
+     (sort (apply 'append
                    (mapcar
                     (lambda (mod)
                       (all-completions
@@ -208,7 +237,8 @@ continues or not."
             (cond
              ((string= chunk "qualified") (push 'qualified attrs))
              ((string= chunk "safe") (push 'safe attrs))
-             ((let ((case-fold-search nil)) (string-match-p "^[A-Z]" chunk))
+             ((let ((case-fold-search nil))
+                (string-match-p "^[[:upper:]]" chunk))
               (cond
                ((not mod) (setq mod (if (memq 'qualified attrs)
                                         (cons chunk chunk)
