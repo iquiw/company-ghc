@@ -134,20 +134,21 @@ If INDEX is non-nil, matched group of the index is returned as cdr."
 
 (defun company-ghc-candidates (prefix)
   "Provide completion candidates for the given PREFIX."
-  (pcase company-ghc--prefix-attr
-    (`(pragma) (all-completions prefix ghc-pragma-names))
-    (`(langopt . "LANGUAGE") (all-completions prefix ghc-language-extensions))
-    (`(langopt . "OPTIONS_GHC") (all-completions prefix ghc-option-flags))
-    (`(impspec . ,mod)
-      (all-completions prefix (company-ghc--get-module-keywords mod)))
-    (`(module) (all-completions prefix ghc-module-names))
-    (`(qualified . ,alias)
-     (let ((mods (company-ghc--list-modules-by-alias alias)))
-       (company-ghc--gather-candidates prefix mods)))
-    (`(keyword)
-     (company-ghc--gather-candidates
-      prefix
-      (mapcar 'car company-ghc--imported-modules)))))
+  (let ((attr company-ghc--prefix-attr))
+    (setq company-ghc--prefix-attr nil)
+    (pcase attr
+      (`(pragma) (all-completions prefix ghc-pragma-names))
+      (`(langopt . "LANGUAGE") (all-completions prefix ghc-language-extensions))
+      (`(langopt . "OPTIONS_GHC") (all-completions prefix ghc-option-flags))
+      (`(impspec . ,mod)
+       (all-completions prefix (company-ghc--get-module-keywords mod)))
+      (`(module) (all-completions prefix ghc-module-names))
+      (`(qualified . ,alias)
+       (let ((mods (company-ghc--list-modules-by-alias alias)))
+         (company-ghc--gather-candidates prefix mods)))
+      (_ (company-ghc--gather-candidates
+          prefix
+          (mapcar 'car company-ghc--imported-modules))))))
 
 (defun company-ghc-meta (candidate)
   "Show type info for the given CANDIDATE."
