@@ -16,8 +16,9 @@
 
 (When "^I execute company-ghc-candidates at current point$"
       (lambda ()
-        (let ((prefix (company-ghc-prefix)))
-          (when (and prefix (not (eq prefix 'stop)))
+        (let* ((tmp (or (company-ghc-prefix) 'stop))
+               (prefix (if (consp tmp) (car tmp) tmp)))
+          (when (not (eq prefix 'stop))
             (setq company-ghc-test-candidates-output
                   (mapcar (lambda (s) (substring-no-properties s))
                           (company-ghc-candidates prefix)))))))

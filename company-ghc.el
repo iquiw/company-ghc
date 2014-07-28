@@ -127,7 +127,7 @@ If INDEX is non-nil, matched group of the index is returned as cdr."
      ((let ((case-fold-search nil))
         (looking-back company-ghc-qualified-keyword-regexp))
       (company-ghc--set-prefix-attr 'qualified 1)
-      (match-string-no-properties 2))
+      (cons (match-string-no-properties 2) t))
 
      (t (company-ghc--set-prefix-attr 'keyword)
         (company-grab-symbol)))))
