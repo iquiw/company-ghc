@@ -80,57 +80,83 @@
 (defconst company-ghc-module-regexp
   "module[[:space:]]*\\([[:word:].]+\\_>\\|\\)")
 
-(defvar company-ghc-propertized-modules '())
-(defvar company-ghc-imported-modules '())
-(make-variable-buffer-local 'company-ghc-imported-modules)
+(defconst company-ghc-qualified-keyword-regexp
+  (concat
+   "\\_<\\([[:upper:]][[:alnum:].]*\\)\\."
+   "\\([[:word:]]+\\_>\\|\\)"))
+
+(defvar company-ghc--propertized-modules '())
+(defvar company-ghc--imported-modules '())
+(make-variable-buffer-local 'company-ghc--imported-modules)
+
+(defvar company-ghc--prefix-attr)
+(defun company-ghc--set-prefix-attr (candtype &optional index)
+  "Set `company-ghc--prefix-attr' to CANDTYPE and optional match string.
+If INDEX is non-nil, matched group of the index is returned as cdr."
+  (setq company-ghc--prefix-attr
+        (cons candtype (when index (match-string-no-properties index)))))
 
 (defun company-ghc-prefix ()
   "Provide completion prefix at the current point."
   (let ((ppss (syntax-ppss)))
     (cond
      ((nth 3 ppss) 'stop)
-     ((nth 4 ppss) (or
-                    (company-grab company-ghc-pragma-regexp 1)
-                    (company-grab company-ghc-langopt-regexp 2)))
+     ((nth 4 ppss)
+      (cond
+       ((company-grab company-ghc-pragma-regexp)
+        (company-ghc--set-prefix-attr 'pragma)
+        (match-string-no-properties 1))
+       ((company-grab company-ghc-langopt-regexp)
+        (company-ghc--set-prefix-attr 'langopt 1)
+        (match-string-no-properties 2))))
+
      ((looking-back "^[^[:space:]]*") nil)
-     (t (company-grab-symbol)))))
+
+     ((company-grab company-ghc-impdecl-regexp)
+      (company-ghc--set-prefix-attr 'impspec 1)
+      (match-string-no-properties 2))
+
+     ((company-grab company-ghc-import-regexp)
+      (company-ghc--set-prefix-attr 'module)
+      (match-string-no-properties 1))
+
+     ((company-grab company-ghc-module-regexp)
+      (company-ghc--set-prefix-attr 'module)
+      (match-string-no-properties 1))
+
+     ((let ((case-fold-search nil))
+        (looking-back company-ghc-qualified-keyword-regexp))
+      (company-ghc--set-prefix-attr 'qualified 1)
+      (cons (match-string-no-properties 2) t))
+
+     (t (company-ghc--set-prefix-attr 'keyword)
+        (company-grab-symbol)))))
 
 (defun company-ghc-candidates (prefix)
   "Provide completion candidates for the given PREFIX."
-  (cond
-   ((company-grab company-ghc-impdecl-regexp)
-    (let ((mod (match-string-no-properties 1)))
-      (all-completions prefix (company-ghc-get-module-keywords mod))))
-
-   ((company-grab company-ghc-import-regexp)
-    (all-completions (match-string-no-properties 1) ghc-module-names))
-
-   ((company-grab company-ghc-module-regexp)
-    (all-completions (match-string-no-properties 1) ghc-module-names))
-
-   ((company-grab company-ghc-pragma-regexp)
-    (all-completions prefix ghc-pragma-names))
-
-   ((company-grab company-ghc-langopt-regexp)
-    (if (string-equal (match-string-no-properties 1) "LANGUAGE")
-        (all-completions (match-string-no-properties 2)
-                         ghc-language-extensions)
-      (all-completions (match-string-no-properties 2)
-                       ghc-option-flags)))
-
-   (t (sort (apply 'append
-                   (mapcar
-                    (lambda (mod)
-                      (all-completions
-                       prefix (company-ghc-get-module-keywords mod)))
-                    (mapcar 'car company-ghc-imported-modules)))
-            'string<))))
+  (let ((attr company-ghc--prefix-attr))
+    (setq company-ghc--prefix-attr nil)
+    (pcase attr
+      (`(pragma) (all-completions prefix ghc-pragma-names))
+      (`(langopt . "LANGUAGE") (all-completions prefix ghc-language-extensions))
+      (`(langopt . "OPTIONS_GHC") (all-completions prefix ghc-option-flags))
+      (`(impspec . ,mod)
+       (all-completions prefix (company-ghc--get-module-keywords mod)))
+      (`(module) (all-completions prefix ghc-module-names))
+      (`(qualified . ,alias)
+       (let ((mods (company-ghc--list-modules-by-alias alias)))
+         (company-ghc--gather-candidates prefix mods)))
+      (_ (company-ghc--gather-candidates
+          prefix
+          (mapcar 'car company-ghc--imported-modules))))))
 
 (defun company-ghc-meta (candidate)
   "Show type info for the given CANDIDATE."
-  (let ((mod (company-ghc-get-module candidate)))
-    (when mod
-      (let ((info (ghc-get-info (concat mod "." candidate))))
+  (let* ((mod (company-ghc--get-module candidate))
+         (pair (and mod (assoc-string mod company-ghc--imported-modules)))
+         (qualifier (or (and pair (cdr pair)) mod)))
+    (when qualifier
+      (let ((info (ghc-get-info (concat qualifier "." candidate))))
         (pcase company-ghc-show-info
           (`t info)
           (`oneline (replace-regexp-in-string "\n" "" info))
@@ -146,7 +172,7 @@
     (let ((hoogle (if (boundp 'haskell-hoogle-command)
                       haskell-hoogle-command
                     "hoogle"))
-          (mod (company-ghc-get-module candidate)))
+          (mod (company-ghc--get-module candidate)))
       (call-process hoogle nil t nil "search" "--info"
                     (if mod (concat mod "." candidate) candidate)))
     (company-doc-buffer
@@ -155,25 +181,36 @@
 (defun company-ghc-annotation (candidate)
   "Show module name as annotation where the given CANDIDATE is defined."
   (when company-ghc-show-module
-    (concat " " (company-ghc-get-module candidate))))
+    (concat " " (company-ghc--get-module candidate))))
 
-(defun company-ghc-get-module-keywords (mod)
+(defun company-ghc--gather-candidates (prefix mods)
+  "Gather all candidates from the keywords in MODS and return them sorted."
+  (when mods
+    (sort (apply 'append
+                 (mapcar
+                  (lambda (mod)
+                    (all-completions
+                     prefix (company-ghc--get-module-keywords mod)))
+                  mods))
+          'string<)))
+
+(defun company-ghc--get-module-keywords (mod)
   "Get defined keywords in the specified module MOD."
   (let ((sym (ghc-module-symbol mod)))
     (unless (boundp sym)
       (ghc-load-merge-modules (list mod)))
     (when (boundp sym)
-      (if (member mod company-ghc-propertized-modules)
+      (if (member mod company-ghc--propertized-modules)
           (ghc-module-keyword mod)
-        (push mod company-ghc-propertized-modules)
-        (mapcar (lambda (k) (company-ghc-set-module k mod))
+        (push mod company-ghc--propertized-modules)
+        (mapcar (lambda (k) (company-ghc--set-module k mod))
                 (ghc-module-keyword mod))))))
 
-(defun company-ghc-get-module (s)
+(defun company-ghc--get-module (s)
   "Get module name from the keyword S."
   (get-text-property 0 'company-ghc-module s))
 
-(defun company-ghc-set-module (s mod)
+(defun company-ghc--set-module (s mod)
   "Set module name of the keywork S to the module MOD."
   (put-text-property 0 (length s) 'company-ghc-module mod s)
   s)
@@ -191,7 +228,7 @@
                  (if (and (assoc-string (car mod) mod-alist) (cdr mod))
                      (delete (assoc-string (car mod) mod-alist) mod-alist)
                    mod-alist)))))
-      (setq company-ghc-imported-modules mod-alist))))
+      (setq company-ghc--imported-modules mod-alist))))
 
 (defun company-ghc--scan-impdecl ()
   "Scan one import spec and return module alias cons.
@@ -208,7 +245,8 @@ continues or not."
             (cond
              ((string= chunk "qualified") (push 'qualified attrs))
              ((string= chunk "safe") (push 'safe attrs))
-             ((let ((case-fold-search nil)) (string-match-p "^[A-Z]" chunk))
+             ((let ((case-fold-search nil))
+                (string-match-p "^[[:upper:]]" chunk))
               (cond
                ((not mod) (setq mod (if (memq 'qualified attrs)
                                         (cons chunk chunk)
@@ -222,7 +260,7 @@ continues or not."
   "Search start of import decl and return the point after import and offset."
   (catch 'result
     (while (re-search-forward "^\\([[:space:]]*\\)import\\>" nil t)
-      (unless (nth 4 (syntax-ppss))
+      (unless (company-ghc--in-comment-p)
         (throw 'result
                (cons (match-end 0)
                      (string-width (match-string-no-properties 1))))))))
@@ -265,6 +303,12 @@ If the line is less offset than OFFSET, it finishes the search."
   "Return whether the point is in comment or not."
   (let ((ppss (syntax-ppss))) (nth 4 ppss)))
 
+(defun company-ghc--list-modules-by-alias (alias)
+  "Return list of imported modules that have ALIAS."
+  (let (mods)
+    (cl-dolist (pair company-ghc--imported-modules mods)
+      (when (string= (cdr pair) alias)
+        (setq mods (cons (car pair) mods))))))
 
 ;;;###autoload
 (defun company-ghc (command &optional arg &rest ignored)

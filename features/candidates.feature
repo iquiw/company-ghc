@@ -167,6 +167,7 @@ Feature: company-ghc candidates
       | module          | keywords                               |
       | Predule         | head readFile splitAt tail writeFile   |
       | Data.Text       | Text singleton splitOn strip           |
+      | Data.Text.IO    | readFile writeFile                     |
       | Data.ByteString | ByteString singleton splitAt           |
       | System.IO       | readFile stderr stdin stdout writeFile |
 
@@ -226,7 +227,11 @@ Feature: company-ghc candidates
 
   Scenario: Loaded modules keyword candidates
     Given the buffer is empty
-    Given these imported modules "Data.Text System.IO"
+    And these imported modules:
+      | module    | alias |
+      | Data.Text |       |
+      | System.IO |       |
+
     When I insert:
     """
     main = do
@@ -242,5 +247,60 @@ Feature: company-ghc candidates
     "stdin"
     "stdout"
     "strip"
+    )
+    """
+
+  Scenario: Qualified imported keyword candidates
+    Given the buffer is empty
+    And these imported modules:
+      | module          | alias           |
+      | Data.Text       | T               |
+      | Data.Text.IO    | T               |
+      | Data.ByteString | Data.ByteString |
+      | System.IO       |                 |
+
+    When I insert:
+    """
+    foo = T.
+    """
+    And I execute company-ghc-candidates at current point
+    Then company-ghc candidates are:
+    """
+    (
+    "Text"
+    "readFile"
+    "singleton"
+    "splitOn"
+    "strip"
+    "writeFile"
+    )
+    """
+
+    Given the buffer is empty
+    When I insert:
+    """
+    foo = T.s
+    """
+    And I execute company-ghc-candidates at current point
+    Then company-ghc candidates are:
+    """
+    (
+    "singleton"
+    "splitOn"
+    "strip"
+    )
+    """
+
+    Given the buffer is empty
+    When I insert:
+    """
+    foo = Data.ByteString.s
+    """
+    And I execute company-ghc-candidates at current point
+    Then company-ghc candidates are:
+    """
+    (
+    "singleton"
+    "splitAt"
     )
     """
