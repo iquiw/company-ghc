@@ -83,7 +83,12 @@ The following completions are available.
    .. image:: images/impspec.png
       :alt: Completion for import specs
 
-6. Keywords from imported modules.
+6. Qualified imported keywords.
+
+   .. image:: images/qualified.png
+      :alt: Completion for qualified imported keywords
+
+7. Keywords from imported modules.
 
    .. image:: images/keyword.png
       :alt: Completion for keywords of imported modules
@@ -123,7 +128,6 @@ As of now, if you want to use other back-ends with company-ghc, use grouped back
 
 TODO
 ====
-* Context sensitive completion for qualified imported keywords.
 * Support doc-buffer using `haskell-docs`_ (`hoogle`_ support is available).
 
 License
