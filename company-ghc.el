@@ -186,12 +186,11 @@ If INDEX is non-nil, matched group of the index is returned as cdr."
 (defun company-ghc--gather-candidates (prefix mods)
   "Gather all candidates from the keywords in MODS and return them sorted."
   (when mods
-    (sort (apply 'append
-                 (mapcar
-                  (lambda (mod)
-                    (all-completions
-                     prefix (company-ghc--get-module-keywords mod)))
-                  mods))
+    (sort (cl-mapcan
+           (lambda (mod)
+             (all-completions
+              prefix (company-ghc--get-module-keywords mod)))
+           mods)
           'string<)))
 
 (defun company-ghc--get-module-keywords (mod)
