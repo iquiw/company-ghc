@@ -1,6 +1,6 @@
-=============
- Company GHC
-=============
+======================
+ Company GHC |travis|
+======================
 
 .. contents:: Table of Contents
 .. sectnum::
@@ -140,3 +140,5 @@ Licensed under the GPL 3+ license.
 .. _haskell-docs: https://github.com/chrisdone/haskell-docs
 .. _hoogle: https://hackage.haskell.org/package/hoogle
 .. _MELPA: http://melpa.milkbox.net/
+.. |travis| image:: https://api.travis-ci.org/iquiw/company-ghc.svg?branch=master
+            :target: https://travis-ci.org/iquiw/company-ghc
