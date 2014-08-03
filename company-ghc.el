@@ -56,9 +56,9 @@
   "Non-nil to show module name as annotation."
   :type 'boolean)
 
-(defcustom company-ghc-hoogle-command (if (boundp 'haskell-hoogle-command)
-                                          haskell-hoogle-command
-                                        "hoogle")
+(defcustom company-ghc-hoogle-command (or (and (boundp 'haskell-hoogle-command)
+                                               haskell-hoogle-command)
+                                          "hoogle")
   "Specify hoogle command name, default is the value of `haskell-hoogle-command'"
   :type 'string)
 
