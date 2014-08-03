@@ -2,7 +2,7 @@
 
 (require 'ert)
 (require 'espuds)
-(require 'haskell-mode-autoloads)
+(require 'haskell-mode)
 (require 'company-ghc)
 
 (defvar company-ghc-test-prefix-output)
