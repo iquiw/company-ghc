@@ -56,6 +56,12 @@
   "Non-nil to show module name as annotation."
   :type 'boolean)
 
+(defcustom company-ghc-hoogle-command (if (boundp 'haskell-hoogle-command)
+                                          haskell-hoogle-command
+                                        "hoogle")
+  "Specify hoogle command name, default is the value of `haskell-hoogle-command'"
+  :type 'string)
+
 (defconst company-ghc-pragma-regexp "{-#[[:space:]]+\\([[:upper:]]+\\>\\|\\)")
 
 (defconst company-ghc-langopt-regexp
@@ -169,11 +175,8 @@ If INDEX is non-nil, matched group of the index is returned as cdr."
   "Display documentation in the docbuffer for the given CANDIDATE."
   (with-temp-buffer
     (erase-buffer)
-    (let ((hoogle (if (boundp 'haskell-hoogle-command)
-                      haskell-hoogle-command
-                    "hoogle"))
-          (mod (company-ghc--get-module candidate)))
-      (call-process hoogle nil t nil "search" "--info"
+    (let ((mod (company-ghc--get-module candidate)))
+      (call-process company-ghc-hoogle-command nil t nil "search" "--info"
                     (if mod (concat mod "." candidate) candidate)))
     (company-doc-buffer
      (buffer-substring-no-properties (point-min) (point-max)))))
