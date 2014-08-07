@@ -4,7 +4,7 @@
 
 ;; Author:    Iku Iwasa <iku.iwasa@gmail.com>
 ;; URL:       https://github.com/iquiw/company-ghc
-;; Version:   0.1.0
+;; Version:   0.1.1
 ;; Package-Requires: ((cl-lib "0.5") (company "0.8.0") (ghc "4.1.1") (emacs "24"))
 ;; Keywords:  haskell, completion
 ;; Stability: experimental
@@ -61,6 +61,10 @@
                                           "hoogle")
   "Specify hoogle command name, default is the value of `haskell-hoogle-command'"
   :type 'string)
+
+(defcustom company-ghc-autoscan-after-save t
+  "Non-nil to enable automatic scan module after save."
+  :type 'boolean)
 
 (defconst company-ghc-pragma-regexp "{-#[[:space:]]+\\([[:upper:]]+\\>\\|\\)")
 
@@ -219,6 +223,7 @@ If INDEX is non-nil, matched group of the index is returned as cdr."
 
 (defun company-ghc-scan-modules ()
   "Scan imported modules in the current buffer."
+  (interactive)
   (save-excursion
     (goto-char (point-min))
     (let (mod (mod-alist '(("Prelude"))))
@@ -231,6 +236,18 @@ If INDEX is non-nil, matched group of the index is returned as cdr."
                      (delete (assoc-string (car mod) mod-alist) mod-alist)
                    mod-alist)))))
       (setq company-ghc--imported-modules mod-alist))))
+
+(defun company-ghc-turn-on-autoscan ()
+  "Turn on automatic scan module after save."
+  (interactive)
+  (add-hook 'after-save-hook 'company-ghc-scan-modules nil t)
+  (message "company-ghc autoscan is enabled"))
+
+(defun company-ghc-turn-off-autoscan ()
+  "Turn off automatic scan module after save."
+  (interactive)
+  (remove-hook 'after-save-hook 'company-ghc-scan-modules t)
+  (message "company-ghc autoscan is disabled"))
 
 (defun company-ghc--scan-impdecl ()
   "Scan one import spec and return module alias cons.
@@ -320,7 +337,8 @@ Provide completion info according to COMMAND and ARG.  IGNORED, not used."
   (cl-case command
     (init (when (derived-mode-p 'haskell-mode)
             (company-ghc-scan-modules)
-            (add-hook 'after-save-hook 'company-ghc-scan-modules nil t)))
+            (when company-ghc-autoscan-after-save
+              (add-hook 'after-save-hook 'company-ghc-scan-modules nil t))))
     (interactive (company-begin-backend 'company-ghc))
     (prefix (and (derived-mode-p 'haskell-mode)
                  (company-ghc-prefix)))
