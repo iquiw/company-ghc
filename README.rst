@@ -117,14 +117,23 @@ Display Hoogle document as doc-buffer
 
 Note
 ====
-Currently, company-ghc treats all symbols as completion prefix.
-This means other back-ends after company-ghc have no chance to provide completion candidates in haskell-mode.
+* Currently, company-ghc treats all symbols as completion prefix unless it starts from line beginning.
+  This means other back-ends after company-ghc have no chance to provide completion candidates in haskell-mode.
 
-As of now, if you want to use other back-ends with company-ghc, use grouped back-end like below.
+  As of now, if you want to use other back-ends with company-ghc, use grouped back-end like below.
 
-.. code:: emacs-lisp
+  .. code:: emacs-lisp
 
-   (add-to-list 'company-backends '(company-ghc :with company-dabbrev))
+     (add-to-list 'company-backends '(company-ghc :with company-dabbrev))
+
+* company-ghc add automatic scan module function to local ``after-save-hook``.
+  It might cause serious problem if there is a bug in it.
+  If you have any trouble at save, turn off autoscan by ``M-x company-ghc-turn-off-autoscan``.
+
+  If customized variable ``company-ghc-autoscan-after-save`` is nil,
+  autoscan won't be added to local ``after-save-hook``.
+
+  scan module can be invoked by ``M-x company-ghc-scan-modules``.
 
 TODO
 ====
