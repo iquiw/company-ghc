@@ -13,4 +13,4 @@ before_install:
   - export ECUKES_EMACS="$EMACS"
   - cask
 script:
-  cask exec ecukes
+  cask exec ecukes -r magnars
