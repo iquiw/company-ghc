@@ -62,8 +62,8 @@
   "Specify hoogle command name, default is the value of `haskell-hoogle-command'"
   :type 'string)
 
-(defcustom company-ghc-autoscan-after-save t
-  "Non-nil to enable automatic scan module after save."
+(defcustom company-ghc-autoscan t
+  "Non-nil to enable automatic scan module."
   :type 'boolean)
 
 (defconst company-ghc-pragma-regexp "{-#[[:space:]]+\\([[:upper:]]+\\>\\|\\)")
@@ -335,10 +335,9 @@ If the line is less offset than OFFSET, it finishes the search."
 Provide completion info according to COMMAND and ARG.  IGNORED, not used."
   (interactive (list 'interactive))
   (cl-case command
-    (init (when (derived-mode-p 'haskell-mode)
+    (init (when (and (derived-mode-p 'haskell-mode) company-ghc-autoscan)
             (company-ghc-scan-modules)
-            (when company-ghc-autoscan-after-save
-              (add-hook 'after-save-hook 'company-ghc-scan-modules nil t))))
+            (add-hook 'after-save-hook 'company-ghc-scan-modules nil t)))
     (interactive (company-begin-backend 'company-ghc))
     (prefix (and (derived-mode-p 'haskell-mode)
                  (company-ghc-prefix)))
