@@ -130,9 +130,10 @@ Note
   It might cause serious problem if there is a bug in it.
   If you have any trouble at save, turn off autoscan by ``M-x company-ghc-turn-off-autoscan``.
 
-  If customized variable ``company-ghc-autoscan-after-save`` is nil,
+  If customized variable ``company-ghc-autoscan`` is nil,
   autoscan won't be added to local ``after-save-hook``.
 
+  If scan module is not performed in the buffer, completion by company-ghc does not work properly.
   scan module can be invoked by ``M-x company-ghc-scan-modules``.
 
 TODO
