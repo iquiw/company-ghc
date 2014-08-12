@@ -347,5 +347,46 @@ Provide completion info according to COMMAND and ARG.  IGNORED, not used."
     (annotation (company-ghc-annotation arg))
     (sorted t)))
 
+;;;###autoload
+(defun company-ghc-diagnose ()
+  "Show diagnostic info of the current buffer in other buffer."
+  (interactive)
+  (if (not (derived-mode-p 'haskell-mode))
+      (message "Not in haskell-mode")
+    (let ((be (catch 'result
+                (cl-dolist (x company-backends)
+                  (cond
+                   ((and (listp x) (memq 'company-ghc x)) (throw 'result x))
+                   ((eq x 'company-ghc) (throw 'result x))))))
+          (mods company-ghc--imported-modules))
+      (switch-to-buffer-other-window "**company-ghc diagnostic info**")
+      (erase-buffer)
+      (if be
+          (insert (format "company-ghc backend found: %s\n\n" be))
+        (insert "company-ghc backend not found\n\n"))
+      (insert "Module")
+      (move-to-column 35 t)
+      (insert "Alias")
+      (move-to-column 60 t)
+      (insert "Candidates\n")
+      (insert-char ?- 79)
+      (insert "\n")
+      (cl-dolist (pair mods)
+        (let* ((mod (car pair))
+               (alias (cdr pair))
+               (sym (ghc-module-symbol mod))
+               (len (or (and (boundp sym)
+                             (length (ghc-module-keyword mod)))
+                        nil)))
+          (insert mod)
+          (move-to-column 35 t)
+          (delete-region (point) (line-end-position))
+          (insert (or alias "-"))
+          (move-to-column 60 t)
+          (delete-region (point) (line-end-position))
+          (insert (format "%s\n" len))))
+      (help-mode-setup)
+      (goto-char (point-min)))))
+
 (provide 'company-ghc)
 ;;; company-ghc.el ends here
