@@ -325,9 +325,10 @@ If the line is less offset than OFFSET, it finishes the search."
 (defun company-ghc--list-modules-by-alias (alias)
   "Return list of imported modules that have ALIAS."
   (let (mods)
-    (cl-dolist (pair company-ghc--imported-modules mods)
+    (cl-dolist (pair company-ghc--imported-modules)
       (when (string= (cdr pair) alias)
-        (setq mods (cons (car pair) mods))))))
+        (setq mods (cons (car pair) mods))))
+    mods))
 
 ;;;###autoload
 (defun company-ghc (command &optional arg &rest ignored)
