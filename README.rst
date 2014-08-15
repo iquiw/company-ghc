@@ -136,9 +136,40 @@ Note
   If scan module is not performed in the buffer, completion by company-ghc does not work properly.
   scan module can be invoked by ``M-x company-ghc-scan-modules``.
 
-TODO
-====
-* Support doc-buffer using `haskell-docs`_ (`hoogle`_ support is available).
+
+Diagnostic
+==========
+There are some cases that completion by company-ghc does not work.
+If there is something wrong, run ``M-x company-ghc-diagnose``,
+which shows diagnostic info like the followings::
+
+   company-ghc backend found: company-ghc
+   automatic scan module is enabled
+   
+   Module                                  Alias               Candidates
+   -------------------------------------------------------------------------------
+   Data.Maybe                              -                        12
+   Data.Map                                M                        111
+   Data.Attoparsec.ByteString.Char8        -                        76
+   Control.Applicative                     -                        22
+   Prelude                                 -                        212
+
+The first line shows if ``company-ghc`` is added to ``company-backends`` or not.
+
+The second line shows if company-ghc auto scan is enabled or not.
+
+The table shows rows of imported module in the current buffer,
+its qualified import alias and number of candidates in the module.
+
+If ``company-ghc-autoscan`` is non-nil but company-ghc auto scan is disabled,
+it is possibly initialization step of ``company-ghc`` is not performed by some reason.
+Check company-ghc configuration. For workaround, run ``M-x company-ghc-turn-on-autoscan`` manually.
+
+If some module is not in the table, it is possibly bug of company-ghc.
+
+If number of candidates is 0 or nil, it might be problem related to ``ghc-mod``.
+Try again with setting ``ghc-debug`` to ``t`` and see if there is any error in ``*GHC Debug*`` buffer.
+
 
 License
 =======
