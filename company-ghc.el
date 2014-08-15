@@ -358,12 +358,19 @@ Provide completion info according to COMMAND and ARG.  IGNORED, not used."
                   (cond
                    ((and (listp x) (memq 'company-ghc x)) (throw 'result x))
                    ((eq x 'company-ghc) (throw 'result x))))))
+          (autoscan (memq 'company-ghc-scan-modules after-save-hook))
           (mods company-ghc--imported-modules))
       (switch-to-buffer-other-window "**company-ghc diagnostic info**")
       (erase-buffer)
       (if be
-          (insert (format "company-ghc backend found: %s\n\n" be))
-        (insert "company-ghc backend not found\n\n"))
+          (insert (format "company-ghc backend found: %s\n" be))
+        (insert "company-ghc backend not found\n"))
+      (if autoscan
+          (insert "automatic scan module is enabled\n")
+        (insert "automatic scan module is disabled.\n"
+                "You need to run either 'M-x company-ghc-turn-on-autoscan' once\n"
+                "or 'M-x company-ghc-scan-modules' when it is necessary.\n"))
+      (insert "\n")
       (insert "Module")
       (move-to-column 35 t)
       (insert "Alias")
