@@ -4,7 +4,7 @@
 
 ;; Author:    Iku Iwasa <iku.iwasa@gmail.com>
 ;; URL:       https://github.com/iquiw/company-ghc
-;; Version:   0.1.3
+;; Version:   0.1.4
 ;; Package-Requires: ((cl-lib "0.5") (company "0.8.0") (ghc "4.1.1") (emacs "24"))
 ;; Keywords:  haskell, completion
 ;; Stability: experimental
@@ -299,7 +299,8 @@ If the line is less offset than OFFSET, it finishes the search."
                     (< offset (string-width (match-string-no-properties 1)))))
           (throw 'result (cons p (match-string-no-properties 2)))))
         (forward-line)
-        (setq p (point))))))
+        (setq p (point)))
+      (throw 'result (cons p nil)))))
 
 (defun company-ghc--next-import-chunk ()
   "Return next chunk in the current import spec."
@@ -309,8 +310,9 @@ If the line is less offset than OFFSET, it finishes the search."
        ((or (looking-at-p "{-") (looking-at-p "--"))
         (forward-comment 1))
        ((looking-at-p "(")
-        (throw 'result (buffer-substring-no-properties
-                        (point) (progn (forward-sexp) (point)))))
+        (throw 'result (ignore-errors
+                         (buffer-substring-no-properties
+                          (point) (progn (forward-sexp) (point))))))
        ((looking-at-p "\"")
         (re-search-forward "\"\\([^\"]\\|\\\\\"\\)*\"")
         (throw 'result (match-string-no-properties 0)))
