@@ -1,6 +1,5 @@
 Feature: company-ghc scan modules
 
-  @ghc-mod
   Scenario: Scan simple import
     Given the haskell buffer template
     When I replace template "IMPORT" by:
@@ -33,7 +32,6 @@ Feature: company-ghc scan modules
     # Prelude always added
     Then scanned modules are "(("Prelude"))"
 
-  @ghc-mod
   Scenario: Scan qualified import
     Given the haskell buffer template
     When I replace template "IMPORT" by:
@@ -58,7 +56,6 @@ Feature: company-ghc scan modules
     (("Data.Text.Lazy" . "TL") ("Data.Text" . "T") ("Prelude"))
     """
 
-  @ghc-mod
   Scenario: Scan selective import
     Given the haskell buffer template
     When I replace template "IMPORT" by:
@@ -123,7 +120,6 @@ Feature: company-ghc scan modules
     (("Data.ByteString" . "B") ("Data.Text") ("Prelude"))
     """
 
-  @ghc-mod
   Scenario: Scan incomplete import
     Given the haskell buffer template
     When I replace template "IMPORT" by:
@@ -137,6 +133,30 @@ Feature: company-ghc scan modules
     Then scanned modules are:
     """
     (("Control.") ("Control.Applicative") ("Prelude"))
+    """
+
+    Given the haskell buffer template
+    When I replace template "IMPORT" by:
+    """
+    import Control.Applicative ((<$>),
+    import Data.Text
+    """
+    And I execute company-ghc-scan-modules
+    Then scanned modules are:
+    """
+    (("Data.Text") ("Control.Applicative") ("Prelude"))
+    """
+
+    Given the buffer is empty
+    When I insert:
+    """
+    import Control.Monad
+    import qualified Data.Map as M (
+    """
+    And I execute company-ghc-scan-modules
+    Then scanned modules are:
+    """
+    (("Data.Map" . "M") ("Control.Monad") ("Prelude"))
     """
 
   Scenario: Not scan import in string,comment
