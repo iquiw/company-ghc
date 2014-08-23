@@ -147,8 +147,9 @@ There are some cases that completion by company-ghc does not work.
 If there is something wrong, run ``M-x company-ghc-diagnose``,
 which shows diagnostic info like the following::
 
-   company-ghc backend found: company-ghc
-   automatic scan module is enabled
+   * company-ghc backend found: company-ghc
+   * automatic scan module is enabled
+   * ghc-boot process has been done
    
    Module                                  Alias               Candidates
    -------------------------------------------------------------------------------
@@ -158,9 +159,11 @@ which shows diagnostic info like the following::
    Control.Applicative                     -                        22
    Prelude                                 -                        212
 
-The first line shows if ``company-ghc`` is added to ``company-backends`` or not.
+The first item shows if ``company-ghc`` is added to ``company-backends`` or not.
 
-The second line shows if company-ghc auto scan is enabled or not.
+The second item shows if company-ghc auto scan is enabled or not.
+
+The third item shows if ``ghc-boot`` has been processed properly.
 
 The table shows rows of imported module in the current buffer,
 its qualified import alias and number of candidates in the module.
@@ -169,13 +172,13 @@ If ``company-ghc-autoscan`` is non-nil but company-ghc auto scan is disabled,
 it is possibly initialization step of ``company-ghc`` is not performed by some reason.
 Check company-ghc configuration. For workaround, run ``M-x company-ghc-turn-on-autoscan`` manually.
 
+If ``ghc-boot`` process has not been done or failed to run,
+check ghc-mod configuration (Ref. `ghc-mod manual`_) or whether ``ghc-mod boot`` command from shell or command prompt succeeds in the project directory.
+
 If some module is not in the table, it is possibly bug of company-ghc.
 
 If number of candidates is 0 or nil, it might be problem related to ``ghc-mod``.
 Try again with setting ``ghc-debug`` to ``t`` and see if there is any error in ``*GHC Debug*`` buffer.
-
-If even "Prelude" has 0 candidate, possibly ``ghc-boot`` has not been called or failed to run.
-Check ghc-mod configuration (Ref. `ghc-mod manual`_) or whether ``ghc-mod boot`` command from shell or command prompt succeeds in the project directory.
 
 
 License

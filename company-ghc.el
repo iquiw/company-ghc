@@ -366,13 +366,18 @@ Provide completion info according to COMMAND and ARG.  IGNORED, not used."
       (switch-to-buffer-other-window "**company-ghc diagnostic info**")
       (erase-buffer)
       (if be
-          (insert (format "company-ghc backend found: %s\n" be))
-        (insert "company-ghc backend not found\n"))
+          (insert (format "* company-ghc backend found: %s\n" be))
+        (insert "* company-ghc backend not found\n"))
       (if autoscan
-          (insert "automatic scan module is enabled\n")
-        (insert "automatic scan module is disabled.\n"
-                "You need to run either 'M-x company-ghc-turn-on-autoscan' once\n"
-                "or 'M-x company-ghc-scan-modules' when it is necessary.\n"))
+          (insert "* automatic scan module is enabled\n")
+        (insert "* automatic scan module is disabled.\n"
+                "  You need to run either 'M-x company-ghc-turn-on-autoscan' once\n"
+                "  or 'M-x company-ghc-scan-modules' when it is necessary.\n"))
+      (if (null ghc-module-names)
+          (insert "* ghc-boot process has not been done\n")
+        (if (null ghc-language-extensions)
+            (insert "* ghc-boot process seems to have failed\n")
+          (insert "* ghc-boot process has been done\n")))
       (insert "\n")
       (insert "Module")
       (move-to-column 40 t)
