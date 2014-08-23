@@ -20,6 +20,10 @@ Depends
 * `company-mode`_
 * `ghc-mod`_
 
+  In order to make company-ghc work, ``ghc-comp-init`` needs to be called once.
+  It is called by ``ghc-init``, so if you follow `ghc-mod manual`_, there is nothing else to do about it.
+  Otherwise (if you don't want to call ``ghc-init``), ensure ``ghc-comp-init`` is called before using company-ghc.
+
 Optional Dependency
 -------------------
 * `hoogle`_ command and its database (``hoogle data``) for doc-buffer support.
@@ -141,7 +145,7 @@ Diagnostic
 ==========
 There are some cases that completion by company-ghc does not work.
 If there is something wrong, run ``M-x company-ghc-diagnose``,
-which shows diagnostic info like the followings::
+which shows diagnostic info like the following::
 
    company-ghc backend found: company-ghc
    automatic scan module is enabled
@@ -170,6 +174,9 @@ If some module is not in the table, it is possibly bug of company-ghc.
 If number of candidates is 0 or nil, it might be problem related to ``ghc-mod``.
 Try again with setting ``ghc-debug`` to ``t`` and see if there is any error in ``*GHC Debug*`` buffer.
 
+If even "Prelude" has 0 candidate, possibly ``ghc-boot`` has not been called or failed to run.
+Check ghc-mod configuration (Ref. `ghc-mod manual`_) or whether ``ghc-mod boot`` command from shell or command prompt succeeds in the project directory.
+
 
 License
 =======
@@ -178,6 +185,7 @@ Licensed under the GPL 3+ license.
 .. _company-mode: http://company-mode.github.io/
 .. _haskell-mode: https://github.com/haskell/haskell-mode
 .. _ghc-mod: http://www.mew.org/~kazu/proj/ghc-mod/en/
+.. _ghc-mod manual: http://www.mew.org/~kazu/proj/ghc-mod/en/preparation.html
 .. _haskell-docs: https://github.com/chrisdone/haskell-docs
 .. _hoogle: https://hackage.haskell.org/package/hoogle
 .. _MELPA: http://melpa.milkbox.net/
