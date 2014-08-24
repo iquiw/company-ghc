@@ -128,7 +128,7 @@ Note
 
   .. code:: emacs-lisp
 
-     (add-to-list 'company-backends '(company-ghc :with company-dabbrev))
+     (add-to-list 'company-backends '(company-ghc :with company-dabbrev-code))
 
 * company-ghc add automatic scan module function to local ``after-save-hook``.
   It might cause serious problem if there is a bug in it.
