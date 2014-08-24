@@ -4,7 +4,7 @@
 
 ;; Author:    Iku Iwasa <iku.iwasa@gmail.com>
 ;; URL:       https://github.com/iquiw/company-ghc
-;; Version:   0.1.4
+;; Version:   0.1.5
 ;; Package-Requires: ((cl-lib "0.5") (company "0.8.0") (ghc "4.1.1") (emacs "24"))
 ;; Keywords:  haskell, completion
 ;; Stability: experimental
@@ -204,7 +204,7 @@ If INDEX is non-nil, matched group of the index is returned as cdr."
   "Get defined keywords in the specified module MOD."
   (let ((sym (ghc-module-symbol mod)))
     (unless (boundp sym)
-      (ghc-load-merge-modules (list mod)))
+      (set sym (ghc-load-module mod)))
     (when (boundp sym)
       (if (member mod company-ghc--propertized-modules)
           (ghc-module-keyword mod)
