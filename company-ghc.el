@@ -33,7 +33,7 @@
 ;;
 ;; or grouped with other back-ends.
 ;;
-;;     (add-to-list 'company-backends '(company-ghc :with company-dabbrev))
+;;     (add-to-list 'company-backends '(company-ghc :with company-dabbrev-code))
 
 ;;; Code:
 
