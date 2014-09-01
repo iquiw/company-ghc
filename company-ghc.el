@@ -403,5 +403,21 @@ Provide completion info according to COMMAND and ARG.  IGNORED, not used."
       (help-mode-setup)
       (goto-char (point-min)))))
 
+;; in-module completion
+(defun company-ghc-complete-in-module ()
+  "Complete keywords defined in the module specified in minibuffer."
+  (interactive)
+  (let ((mod (completing-read
+              "Module: " company-ghc--imported-modules nil nil)))
+    (company-begin-backend
+     (lambda (command &optional arg &rest ignored)
+       (cl-case command
+         (prefix (company-grab-symbol))
+         (candidates (company-ghc--gather-candidates arg (list mod)))
+         (meta (company-ghc-meta arg))
+         (doc-buffer (company-ghc-doc-buffer arg))
+         (annotation (company-ghc-annotation arg))
+         (sorted t))))))
+
 (provide 'company-ghc)
 ;;; company-ghc.el ends here

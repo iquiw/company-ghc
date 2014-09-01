@@ -119,6 +119,13 @@ Display Hoogle document as doc-buffer
   .. image:: images/doc-buffer.png
      :alt: Display documentation in docbuffer
 
+Special completion command
+--------------------------
+1. ``M-x company-ghc-complete-inmodule``
+
+   It takes a module name in minibuffer, and provides candidates from keywords defined in the specified module.
+
+
 Note
 ====
 * Currently, company-ghc treats all symbols as completion prefix unless it starts from line beginning.
