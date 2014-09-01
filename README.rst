@@ -121,7 +121,7 @@ Display Hoogle document as doc-buffer
 
 Special completion command
 --------------------------
-1. ``M-x company-ghc-complete-inmodule``
+1. ``M-x company-ghc-complete-in-module``
 
    It takes a module name in minibuffer, and provides candidates from keywords defined in the specified module.
 
