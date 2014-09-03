@@ -3,11 +3,15 @@
 (require 'ert)
 (require 'espuds)
 (require 'haskell-mode)
+(require 'haskell-font-lock)
 (require 'company-ghc)
 
 (defvar company-ghc-test-prefix-output)
 (defvar company-ghc-test-candidates-output)
 (defvar company-ghc-test-imported-modules-output)
+
+(Setup
+ (global-company-mode))
 
 (Before
  (setq company-ghc-test-prefix-output nil)
