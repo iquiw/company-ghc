@@ -4,7 +4,7 @@
 
 ;; Author:    Iku Iwasa <iku.iwasa@gmail.com>
 ;; URL:       https://github.com/iquiw/company-ghc
-;; Version:   0.1.5
+;; Version:   0.1.6
 ;; Package-Requires: ((cl-lib "0.5") (company "0.8.0") (ghc "4.1.1") (emacs "24"))
 ;; Keywords:  haskell, completion
 ;; Stability: experimental
@@ -59,7 +59,8 @@
 (defcustom company-ghc-hoogle-command (or (and (boundp 'haskell-hoogle-command)
                                                haskell-hoogle-command)
                                           "hoogle")
-  "Specify hoogle command name, default is the value of `haskell-hoogle-command'"
+  "Specify hoogle command name for doc-buffer support.
+If `haskell-hoogle-command' is non-nil, the value is used as default."
   :type 'string)
 
 (defcustom company-ghc-autoscan t
@@ -191,7 +192,7 @@ If INDEX is non-nil, matched group of the index is returned as cdr."
     (concat " " (company-ghc--get-module candidate))))
 
 (defun company-ghc--gather-candidates (prefix mods)
-  "Gather all candidates from the keywords in MODS and return them sorted."
+  "Gather candidates for PREFIX from keywords in MODS and return them sorted."
   (when mods
     (sort (cl-mapcan
            (lambda (mod)
@@ -405,7 +406,8 @@ Provide completion info according to COMMAND and ARG.  IGNORED, not used."
 
 ;; in-module completion
 (defun company-ghc-complete-in-module (mod)
-  "Complete keywords defined in the module specified in minibuffer."
+  "Complete keywords defined in the specified MOD.
+When called interactively, MOD is specified in minibuffer."
   (interactive (list (completing-read
                       "Module: " company-ghc--imported-modules nil nil)))
   (company-begin-backend
