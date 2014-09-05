@@ -219,7 +219,7 @@ If INDEX is non-nil, matched group of the index is returned as cdr."
 
 (defun company-ghc--set-module (s mod)
   "Set module name of the keywork S to the module MOD."
-  (put-text-property 0 (length s) 'company-ghc-module mod s)
+  (put-text-property 0 1 'company-ghc-module mod s)
   s)
 
 (defun company-ghc-scan-modules ()
