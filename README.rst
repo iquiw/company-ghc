@@ -121,9 +121,13 @@ Display Hoogle document as doc-buffer
 
 Special completion command
 --------------------------
-1. ``M-x company-ghc-complete-in-module``
+1. In-module completion (``M-x company-ghc-complete-in-module``)
 
    It takes a module name in minibuffer, and provides candidates from keywords defined in the specified module.
+   You can use this as an alternative to ``:browse`` command of GHCi.
+
+   .. image:: images/in-module.png
+      :alt: In-module completion
 
 
 Note
