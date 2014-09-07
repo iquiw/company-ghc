@@ -4,7 +4,7 @@ Feature: company-ghc candidates
     Given the buffer is empty
     Given these GHC pragmas "LANGUAGE OPTIONS_GHC"
     When I insert "{-# "
-    And I execute company-ghc-candidates at current point
+    And I execute company-ghc candidates command at current point
     Then company-ghc candidates are:
     """
     ("LANGUAGE" "OPTIONS_GHC")
@@ -12,7 +12,7 @@ Feature: company-ghc candidates
 
     Given these GHC pragmas "LANGUAGE INCLUDE OPTIONS_GHC INLINE UNPACK"
     When I insert "IN"
-    And I execute company-ghc-candidates at current point
+    And I execute company-ghc candidates command at current point
     Then company-ghc candidates are:
     """
     ("INCLUDE" "INLINE")
@@ -33,7 +33,7 @@ Feature: company-ghc candidates
     NoPostfixOperators
     """
     When I insert "{-# LANGUAGE "
-    And I execute company-ghc-candidates at current point
+    And I execute company-ghc candidates command at current point
     Then company-ghc candidates are:
     """
     (
@@ -50,7 +50,7 @@ Feature: company-ghc candidates
     """
 
     When I insert "Haskell"
-    And I execute company-ghc-candidates at current point
+    And I execute company-ghc candidates command at current point
     Then company-ghc candidates are "("Haskell98" "Haskell2010")"
 
     When I insert:
@@ -58,7 +58,7 @@ Feature: company-ghc candidates
     2010,
                  No
     """
-    And I execute company-ghc-candidates at current point
+    And I execute company-ghc candidates command at current point
     Then company-ghc candidates are "("NoCPP" "NoPostfixOperators")"
 
   Scenario: OPTIONS_GHC candidates
@@ -75,7 +75,7 @@ Feature: company-ghc candidates
     -fno-strictness
     """
     When I insert "{-# OPTIONS_GHC "
-    And I execute company-ghc-candidates at current point
+    And I execute company-ghc candidates command at current point
     Then company-ghc candidates are:
     """
     (
@@ -91,7 +91,7 @@ Feature: company-ghc candidates
     """
 
     When I insert "-fe"
-    And I execute company-ghc-candidates at current point
+    And I execute company-ghc candidates command at current point
     Then company-ghc candidates are "("-ferror-spans")"
 
     When I insert:
@@ -99,7 +99,7 @@ Feature: company-ghc candidates
     error-spans,
                     -fno
     """
-    And I execute company-ghc-candidates at current point
+    And I execute company-ghc candidates command at current point
     Then company-ghc candidates are:
     """
     (
@@ -124,7 +124,7 @@ Feature: company-ghc candidates
     """
 
     When I insert "import "
-    And I execute company-ghc-candidates at current point
+    And I execute company-ghc candidates command at current point
     Then company-ghc candidates are:
     """
     (
@@ -139,7 +139,7 @@ Feature: company-ghc candidates
     """
 
     When I insert "Data."
-    And I execute company-ghc-candidates at current point
+    And I execute company-ghc candidates command at current point
     Then company-ghc candidates are:
     """
     (
@@ -152,7 +152,7 @@ Feature: company-ghc candidates
 
     Given the buffer is empty
     When I insert "import safe qualified System"
-    And I execute company-ghc-candidates at current point
+    And I execute company-ghc candidates command at current point
     Then company-ghc candidates are:
     """
     (
@@ -172,7 +172,7 @@ Feature: company-ghc candidates
       | System.IO       | readFile stderr stdin stdout writeFile |
 
     When I insert "import Data.Text ("
-    And I execute company-ghc-candidates at current point
+    And I execute company-ghc candidates command at current point
     Then company-ghc candidates are:
     """
     (
@@ -184,7 +184,7 @@ Feature: company-ghc candidates
     """
 
     When I insert "s"
-    And I execute company-ghc-candidates at current point
+    And I execute company-ghc candidates command at current point
     Then company-ghc candidates are:
     """
     (
@@ -199,7 +199,7 @@ Feature: company-ghc candidates
     strip,
                      T
     """
-    And I execute company-ghc-candidates at current point
+    And I execute company-ghc candidates command at current point
     Then company-ghc candidates are "("Text")"
 
     When I insert:
@@ -207,7 +207,7 @@ Feature: company-ghc candidates
     ext)
     import qualified Data.ByteString as B (
     """
-    And I execute company-ghc-candidates at current point
+    And I execute company-ghc candidates command at current point
     Then company-ghc candidates are:
     """
     (
@@ -222,7 +222,7 @@ Feature: company-ghc candidates
     )
     import safe "base" System.IO hiding (r
     """
-    And I execute company-ghc-candidates at current point
+    And I execute company-ghc candidates command at current point
     Then company-ghc candidates are "("readFile")"
 
   Scenario: Loaded modules keyword candidates
@@ -237,7 +237,7 @@ Feature: company-ghc candidates
     main = do
         s
     """
-    And I execute company-ghc-candidates at current point
+    And I execute company-ghc candidates command at current point
     Then company-ghc candidates are:
     """
     (
@@ -263,7 +263,7 @@ Feature: company-ghc candidates
     """
     foo = T.
     """
-    And I execute company-ghc-candidates at current point
+    And I execute company-ghc candidates command at current point
     Then company-ghc candidates are:
     """
     (
@@ -281,7 +281,7 @@ Feature: company-ghc candidates
     """
     foo = T.s
     """
-    And I execute company-ghc-candidates at current point
+    And I execute company-ghc candidates command at current point
     Then company-ghc candidates are:
     """
     (
@@ -296,7 +296,7 @@ Feature: company-ghc candidates
     """
     foo = Data.ByteString.s
     """
-    And I execute company-ghc-candidates at current point
+    And I execute company-ghc candidates command at current point
     Then company-ghc candidates are:
     """
     (

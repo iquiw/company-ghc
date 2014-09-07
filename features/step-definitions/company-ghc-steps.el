@@ -1,6 +1,6 @@
-(When "^I execute company-ghc-prefix at current point$"
+(When "^I execute company-ghc prefix command at current point$"
       (lambda ()
-        (setq company-ghc-test-prefix-output (company-ghc-prefix))))
+        (setq company-ghc-test-prefix-output (company-ghc 'prefix))))
 
 (Then "^company-ghc prefix is\\(?: \"\\(.*\\)\"\\|:\\)$"
       (lambda (expected)
@@ -14,14 +14,14 @@
       (lambda ()
         (should (not company-ghc-test-prefix-output))))
 
-(When "^I execute company-ghc-candidates at current point$"
+(When "^I execute company-ghc candidates command at current point$"
       (lambda ()
-        (let* ((tmp (or (company-ghc-prefix) 'stop))
+        (let* ((tmp (or (company-ghc 'prefix) 'stop))
                (prefix (if (consp tmp) (car tmp) tmp)))
           (when (not (eq prefix 'stop))
             (setq company-ghc-test-candidates-output
                   (mapcar (lambda (s) (substring-no-properties s))
-                          (company-ghc-candidates prefix)))))))
+                          (company-ghc 'candidates prefix)))))))
 
 (Then "^company-ghc candidates are\\(?: \"\\(.*\\)\"\\|:\\)$"
       (lambda (expected)

@@ -6,7 +6,7 @@ Feature: company-ghc prefix
     """
     {-# SomePrefix
     """
-    And I execute company-ghc-prefix at current point
+    And I execute company-ghc prefix command at current point
     Then company-ghc prefix is "SomePrefix"
 
   Scenario: LANGUAGE prefix
@@ -15,7 +15,7 @@ Feature: company-ghc prefix
     """
     {-# LANGUAGE SomeFeature
     """
-    And I execute company-ghc-prefix at current point
+    And I execute company-ghc prefix command at current point
     Then company-ghc prefix is "SomeFeature"
 
     Given the buffer is empty
@@ -23,7 +23,7 @@ Feature: company-ghc prefix
     """
     {-# LANGUAGE SomeFeature, AnotherFeature
     """
-    And I execute company-ghc-prefix at current point
+    And I execute company-ghc prefix command at current point
     Then company-ghc prefix is "AnotherFeature"
 
   Scenario: OPTIONS_GHC prefix
@@ -32,7 +32,7 @@ Feature: company-ghc prefix
     """
     {-# OPTIONS_GHC -fSomeOption
     """
-    And I execute company-ghc-prefix at current point
+    And I execute company-ghc prefix command at current point
     Then company-ghc prefix is "-fSomeOption"
 
     Given the buffer is empty
@@ -40,7 +40,7 @@ Feature: company-ghc prefix
     """
     {-# OPTIONS_GHC -fSomeOption, AnotherOption
     """
-    And I execute company-ghc-prefix at current point
+    And I execute company-ghc prefix command at current point
     Then company-ghc prefix is "AnotherOption"
 
   Scenario: Import module prefix
@@ -49,7 +49,7 @@ Feature: company-ghc prefix
     """
     import Some.Module
     """
-    And I execute company-ghc-prefix at current point
+    And I execute company-ghc prefix command at current point
     Then company-ghc prefix is "Some.Module"
 
     Given the buffer is empty
@@ -57,7 +57,7 @@ Feature: company-ghc prefix
     """
     import safe qualified "package" Some.Module
     """
-    And I execute company-ghc-prefix at current point
+    And I execute company-ghc prefix command at current point
     Then company-ghc prefix is "Some.Module"
 
   Scenario: Imported variable prefix
@@ -66,7 +66,7 @@ Feature: company-ghc prefix
     """
     import Some.Module (SomeVar
     """
-    And I execute company-ghc-prefix at current point
+    And I execute company-ghc prefix command at current point
     Then company-ghc prefix is "SomeVar"
 
     Given the buffer is empty
@@ -74,7 +74,7 @@ Feature: company-ghc prefix
     """
     import Some.Module (SomeVar, AnotherVar
     """
-    And I execute company-ghc-prefix at current point
+    And I execute company-ghc prefix command at current point
     Then company-ghc prefix is "AnotherVar"
 
     Given the buffer is empty
@@ -83,7 +83,7 @@ Feature: company-ghc prefix
     import safe qualified "package" Some.Module ( SomeVar
                                                   , AnotherVar
     """
-    And I execute company-ghc-prefix at current point
+    And I execute company-ghc prefix command at current point
     Then company-ghc prefix is "AnotherVar"
 
   Scenario: Keyword prefix
@@ -93,7 +93,7 @@ Feature: company-ghc prefix
     main = do
         someFunc
     """
-    And I execute company-ghc-prefix at current point
+    And I execute company-ghc prefix command at current point
     Then company-ghc prefix is "someFunc"
 
   Scenario: Stopping prefix
@@ -104,7 +104,7 @@ Feature: company-ghc prefix
         putStrLn "someFunc  "
     """
     And I place the cursor after "someFunc"
-    And I execute company-ghc-prefix at current point
+    And I execute company-ghc prefix command at current point
     Then company-ghc prefix stopped
 
   Scenario: No prefix
@@ -113,6 +113,6 @@ Feature: company-ghc prefix
     """
     someLocalFunc
     """
-    And I execute company-ghc-prefix at current point
+    And I execute company-ghc prefix command at current point
     Then company-ghc prefix none
 
