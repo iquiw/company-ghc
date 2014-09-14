@@ -116,3 +116,12 @@ Feature: company-ghc prefix
     And I execute company-ghc prefix command at current point
     Then company-ghc prefix none
 
+  Scenario: Qualified prefix
+    Given the buffer is empty
+    When I insert:
+    """
+    main = do
+        T.someFunc
+    """
+    And I execute company-ghc prefix command at current point
+    Then company-ghc prefix is cons with "someFunc" and "t"

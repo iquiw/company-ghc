@@ -6,6 +6,11 @@
       (lambda (expected)
         (should (equal company-ghc-test-prefix-output expected))))
 
+(Then "^company-ghc prefix is cons with \"\\(.*\\)\" and \"\\(.*\\)\"$"
+      (lambda (exp-car exp-cdr)
+        (should (equal company-ghc-test-prefix-output
+                       (cons exp-car (read exp-cdr))))))
+
 (Then "^company-ghc prefix stopped$"
       (lambda ()
         (should (eq company-ghc-test-prefix-output 'stop))))
