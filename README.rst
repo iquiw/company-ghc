@@ -132,6 +132,10 @@ Special completion command
 2. Hoogle search completion (``M-x company-ghc-complete-by-hoogle``)
 
    It takes a query text in minibuffer, and provide candidates from `hoogle`_ search results.
+   For example, candidates is like the following if the query is ``(a -> b) -> (f a -> f b)``.
+
+   .. image:: images/hoogle-search.png
+      :alt: Hoogle search completion
 
 Note
 ====
