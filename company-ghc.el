@@ -104,54 +104,47 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
 (defvar company-ghc--imported-modules '())
 (make-variable-buffer-local 'company-ghc--imported-modules)
 
-(defvar company-ghc--prefix-attr)
-(defun company-ghc--set-prefix-attr (candtype &optional index)
-  "Set `company-ghc--prefix-attr' to CANDTYPE and optional match string.
-If INDEX is non-nil, matched group of the index is returned as cdr."
-  (setq company-ghc--prefix-attr
-        (cons candtype (when index (match-string-no-properties index)))))
+(defun company-ghc--find-context ()
+  "Find search context at the current point."
+  (cond
+   ((company-ghc--in-comment-p)
+    (cond
+     ((company-grab company-ghc-pragma-regexp)
+      '(pragma))
+     ((company-grab company-ghc-langopt-regexp)
+      (cons 'langopt (match-string-no-properties 1)))))
+
+   ((company-grab company-ghc-impdecl-regexp)
+    (cons 'impspec (match-string-no-properties 1)))
+
+   ((company-grab company-ghc-import-regexp) '(module))
+
+   ((company-grab company-ghc-module-regexp) '(module))
+
+   ((let ((case-fold-search nil))
+      (looking-back company-ghc-qualified-keyword-regexp))
+    (cons 'qualified (match-string-no-properties 1)))
+
+   (t '(keyword))))
 
 (defun company-ghc-prefix ()
   "Provide completion prefix at the current point."
   (let ((ppss (syntax-ppss)))
     (cond
      ((nth 3 ppss) 'stop)
-     ((nth 4 ppss)
-      (cond
-       ((company-grab company-ghc-pragma-regexp)
-        (company-ghc--set-prefix-attr 'pragma)
-        (match-string-no-properties 1))
-       ((company-grab company-ghc-langopt-regexp)
-        (company-ghc--set-prefix-attr 'langopt 1)
-        (match-string-no-properties 2))))
-
      ((looking-back "^[^[:space:]]*") nil)
-
-     ((company-grab company-ghc-impdecl-regexp)
-      (company-ghc--set-prefix-attr 'impspec 1)
-      (match-string-no-properties 2))
-
-     ((company-grab company-ghc-import-regexp)
-      (company-ghc--set-prefix-attr 'module)
-      (match-string-no-properties 1))
-
-     ((company-grab company-ghc-module-regexp)
-      (company-ghc--set-prefix-attr 'module)
-      (match-string-no-properties 1))
-
      ((let ((case-fold-search nil))
-        (looking-back company-ghc-qualified-keyword-regexp))
-      (company-ghc--set-prefix-attr 'qualified 1)
+        (and (save-excursion
+               (beginning-of-line)
+               (not (looking-at-p "^import\\>")))
+             (looking-back company-ghc-qualified-keyword-regexp)))
       (cons (match-string-no-properties 2) t))
-
-     (t (company-ghc--set-prefix-attr 'keyword)
-        (company-grab-symbol)))))
+     (t (company-grab-symbol)))))
 
 (defun company-ghc-candidates (prefix)
   "Provide completion candidates for the given PREFIX."
-  (let ((attr company-ghc--prefix-attr))
-    (setq company-ghc--prefix-attr nil)
-    (pcase attr
+  (let ((ctx (company-ghc--find-context)))
+    (pcase ctx
       (`(pragma) (all-completions prefix ghc-pragma-names))
       (`(langopt . "LANGUAGE") (all-completions prefix ghc-language-extensions))
       (`(langopt . "OPTIONS_GHC") (all-completions prefix ghc-option-flags))
