@@ -67,6 +67,10 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
   "Non-nil to enable automatic scan module."
   :type 'boolean)
 
+(defcustom company-ghc-hoogle-search-limit 20
+  "Specify limit of hoogle search results."
+  :type 'number)
+
 (defconst company-ghc-pragma-regexp "{-#[[:space:]]+\\([[:upper:]]+\\>\\|\\)")
 
 (defconst company-ghc-langopt-regexp
@@ -182,7 +186,7 @@ If INDEX is non-nil, matched group of the index is returned as cdr."
     (erase-buffer)
     (let ((mod (company-ghc--get-module candidate)))
       (call-process company-ghc-hoogle-command nil t nil "search" "--info"
-                    (if mod (concat mod "." candidate) candidate)))
+                    (if mod (concat candidate " +" mod) candidate)))
     (company-doc-buffer
      (buffer-substring-no-properties (point-min) (point-max)))))
 
@@ -215,13 +219,20 @@ If INDEX is non-nil, matched group of the index is returned as cdr."
 
 (defun company-ghc--get-module (s)
   "Get module name from the keyword S."
-  (get-text-property 0 'company-ghc-module s))
+  (get-text-property 0 :module s))
 
 (defun company-ghc--set-module (s mod)
   "Set module name of the keywork S to the module MOD."
-  (put-text-property 0 1 'company-ghc-module mod s)
+  (put-text-property 0 1 :module mod s)
   s)
 
+(defun company-ghc--get-type (s)
+  "Get type of the keyword S."
+  (get-text-property 0 :type s))
+
+;;
+;; import module parsing
+;;
 (defun company-ghc-scan-modules ()
   "Scan imported modules in the current buffer."
   (interactive)
@@ -321,6 +332,9 @@ If the line is less offset than OFFSET, it finishes the search."
         (throw 'result (match-string-no-properties 0)))
        (t (throw 'result nil))))))
 
+;;
+;; Unitilities
+;;
 (defun company-ghc--in-comment-p ()
   "Return whether the point is in comment or not."
   (let ((ppss (syntax-ppss))) (nth 4 ppss)))
@@ -332,6 +346,23 @@ If the line is less offset than OFFSET, it finishes the search."
       (when (string= (cdr pair) alias)
         (setq mods (cons (car pair) mods))))
     mods))
+
+(defun company-ghc--propertize-candidate (candidate &rest props)
+  "Propertize CANDIDATE according to its string format and given PROPS."
+  (let ((len (length candidate))
+        (case-fold-search nil)
+        knd)
+    (cond
+     ((and (> len 2) (eq (string-to-char candidate) ?\())
+      (setq candidate (substring candidate 1 (- len 1)))
+      (setq knd 'operator))
+     ((string-match-p "^[[:upper:]]" candidate)
+      (setq knd 'constructor))
+     (t
+      (setq knd 'identifier)))
+    (apply 'add-text-properties
+           0 1 (append (list :kind knd) props) (list candidate))
+    candidate))
 
 ;;;###autoload
 (defun company-ghc (command &optional arg &rest ignored)
@@ -404,7 +435,9 @@ Provide completion info according to COMMAND and ARG.  IGNORED, not used."
       (help-mode-setup)
       (goto-char (point-min)))))
 
+;;
 ;; in-module completion
+;;
 (defun company-ghc-complete-in-module (mod)
   "Complete keywords defined in the specified MOD.
 When called interactively, MOD is specified in minibuffer."
@@ -419,6 +452,55 @@ When called interactively, MOD is specified in minibuffer."
        (doc-buffer (company-ghc-doc-buffer arg))
        (annotation (company-ghc-annotation arg))
        (sorted t)))))
+
+;;
+;; hoogle search completion
+;;
+(defun company-ghc-complete-by-hoogle (query)
+  "Complete keywords searched by hoogle with the specified QUERY.
+When called interactively, QUERY is specified in minibuffer."
+  (interactive "sHoogle: ")
+  (company-begin-backend
+   (lambda (command &optional arg &rest ignored)
+     (cl-case command
+       (prefix (company-grab-symbol))
+       (candidates (cons :async
+                         (lambda (callback)
+                           (company-ghc--hoogle-candidates query callback))))
+       (meta (company-ghc--get-type arg))
+       (doc-buffer (company-ghc-doc-buffer arg))
+       (annotation (company-ghc-annotation arg))
+       (sorted t)))))
+
+(defun company-ghc--hoogle-candidates (query callback)
+  "Provide hoogle search results for QUERY to CALLBACK asynchronously."
+  (let ((proc (start-process
+               "hoogle search" nil company-ghc-hoogle-command
+               "search" "-n" (number-to-string company-ghc-hoogle-search-limit)
+               query))
+        result)
+
+    (set-process-filter
+     proc
+     (lambda (_proc str)
+       (let ((re "^\\([^[:space:]]+\\) \\([^[:space:]]+\\)\\(.*\\)$")
+             (offset 0))
+         (while (string-match re str offset)
+           (setq offset (match-end 0))
+           (let* ((mod (match-string 1 str))
+                  (fun (match-string 2 str))
+                  (typ (concat fun (match-string 3 str))))
+             (unless
+                 (or (member mod '("package" "keyword"))
+                     (member fun '("class" "data" "module" "newtype" "type")))
+               (push (company-ghc--propertize-candidate
+                      fun :module mod :type typ) result)))))))
+
+    (set-process-sentinel
+     proc
+     (lambda (_proc _status)
+       (when (eq (process-status proc) 'exit)
+         (funcall callback result))))))
 
 (provide 'company-ghc)
 ;;; company-ghc.el ends here

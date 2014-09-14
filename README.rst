@@ -26,7 +26,7 @@ Depends
 
 Optional Dependency
 -------------------
-* `hoogle`_ command and its database (``hoogle data``) for doc-buffer support.
+* `hoogle`_ command and its database (``hoogle data``) for doc-buffer support and hoogle search completion.
 
 Setup from MELPA_
 -----------------
@@ -129,6 +129,9 @@ Special completion command
    .. image:: images/in-module.png
       :alt: In-module completion
 
+2. Hoogle search completion (``M-x company-ghc-complete-by-hoogle``)
+
+   It takes a query text in minibuffer, and provide candidates from `hoogle`_ search results.
 
 Note
 ====
