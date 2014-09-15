@@ -483,7 +483,7 @@ When called interactively, QUERY is specified in minibuffer."
     (set-process-filter
      proc
      (lambda (_proc str)
-       (let ((re "^\\([^[:space:]]+\\) \\([^[:space:]]+\\)\\(.*\\)$")
+       (let ((re "^\\([^[:space:]]+\\) \\([^[:space:]\n]+\\)\\([^\n]*\\)$")
              (offset 0))
          (while (string-match re str offset)
            (setq offset (match-end 0))
@@ -500,7 +500,7 @@ When called interactively, QUERY is specified in minibuffer."
      proc
      (lambda (_proc _status)
        (when (eq (process-status proc) 'exit)
-         (funcall callback result))))))
+         (funcall callback (nreverse result)))))))
 
 (provide 'company-ghc)
 ;;; company-ghc.el ends here
