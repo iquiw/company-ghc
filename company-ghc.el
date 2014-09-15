@@ -474,33 +474,36 @@ When called interactively, QUERY is specified in minibuffer."
 
 (defun company-ghc--hoogle-candidates (query callback)
   "Provide hoogle search results for QUERY to CALLBACK asynchronously."
-  (let ((proc (start-process
-               "hoogle search" nil company-ghc-hoogle-command
-               "search" "-n" (number-to-string company-ghc-hoogle-search-limit)
-               query))
-        result)
-
-    (set-process-filter
-     proc
-     (lambda (_proc str)
-       (let ((re "^\\([^[:space:]]+\\) \\([^[:space:]\n]+\\)\\([^\n]*\\)$")
-             (offset 0))
-         (while (string-match re str offset)
-           (setq offset (match-end 0))
-           (let* ((mod (match-string 1 str))
-                  (fun (match-string 2 str))
-                  (typ (concat fun (match-string 3 str))))
-             (unless
-                 (or (member mod '("package" "keyword"))
-                     (member fun '("class" "data" "module" "newtype" "type")))
-               (push (company-ghc--propertize-candidate
-                      fun :module mod :type typ) result)))))))
-
+  (with-current-buffer (get-buffer-create "*company-ghc hoogle results*")
+    (erase-buffer)
     (set-process-sentinel
-     proc
-     (lambda (_proc _status)
+     (start-process "hoogle search" (current-buffer)
+                    company-ghc-hoogle-command "search" "-n"
+                    (number-to-string company-ghc-hoogle-search-limit) query)
+     (lambda (proc _status)
        (when (eq (process-status proc) 'exit)
-         (funcall callback (nreverse result)))))))
+         (with-current-buffer (process-buffer proc)
+           (company-ghc--hoogle-parse-results callback)
+           (kill-buffer)))))))
+
+(defun company-ghc--hoogle-parse-results (callback)
+  "Parse hoogle search results in the current buffer.
+Pass propertized candidates to CALLBACK."
+  (let (result)
+    (goto-char (point-min))
+    (if (looking-at-p "^No results found$")
+        (funcall callback '())
+      (while (re-search-forward
+              "^\\([^[:space:]]+\\) \\([^[:space:]\n]+\\)\\(.*\\)$" nil t)
+        (let* ((mod (match-string 1))
+               (fun (match-string 2))
+               (typ (concat fun (match-string 3))))
+          (unless
+              (or (member mod '("package" "keyword"))
+                  (member fun '("class" "data" "module" "newtype" "type")))
+            (push (company-ghc--propertize-candidate
+                   fun :module mod :type typ) result))))
+      (funcall callback (nreverse result)))))
 
 (provide 'company-ghc)
 ;;; company-ghc.el ends here

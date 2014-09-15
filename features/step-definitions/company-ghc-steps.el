@@ -105,16 +105,13 @@ main = do
       (lambda (expected)
         (should (equal company-ghc-test-imported-modules (read expected)))))
 
-(When "^I execute hoogle search candidates$"
+(When "^I parse hoogle search results$"
       (lambda (cb)
-        (let ((company-ghc-hoogle-command
-               (f-join company-ghc-features-path "tools" "dummy-hoogle.sh")))
-          (lexical-let ((callback cb))
-            (company-ghc--hoogle-candidates
-             "dummy"
-             (lambda (result)
-               (setq company-ghc-test-hoogle-candidates-output result)
-               (funcall callback)))))))
+        (lexical-let ((callback cb))
+          (company-ghc--hoogle-parse-results
+           (lambda (result)
+             (setq company-ghc-test-hoogle-candidates-output result)
+             (funcall callback))))))
 
 (Then "^hoogle search candidates are\\(?: \"\\(.*\\)\"\\|:\\)$"
       (lambda (expected)
