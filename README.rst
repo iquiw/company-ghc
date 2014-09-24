@@ -137,6 +137,10 @@ Special completion command
    .. image:: images/hoogle-search.png
       :alt: Hoogle search completion
 
+   If hoogle search completion failed by async timeout, increase the value of ``company-async-timeout`` (default 2).
+
+   If you want to get more search results at a time, increase the value of ``company-ghc-hoogle-search-limit`` (default 20).
+
 Note
 ====
 * Currently, company-ghc treats all symbols as completion prefix unless it starts from line beginning.
