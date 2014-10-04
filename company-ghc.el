@@ -200,9 +200,11 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
 
 (defun company-ghc--get-module-keywords (mod)
   "Get defined keywords in the specified module MOD."
-  (let ((sym (ghc-module-symbol mod)))
-    (unless (boundp sym)
-      (set sym (ghc-load-module mod)))
+  (let ((sym (ghc-module-symbol mod))
+        result)
+    (when (and (not (boundp sym))
+               (listp (setq result (ghc-load-module mod))))
+      (set sym result))
     (when (boundp sym)
       (if (member mod company-ghc--propertized-modules)
           (ghc-module-keyword mod)
