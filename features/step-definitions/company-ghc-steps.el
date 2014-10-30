@@ -111,11 +111,9 @@ main = do
         (should (equal company-ghc-test-imported-modules (read expected)))))
 
 (When "^I parse hoogle search results$"
-      (lambda (callback)
-        (company-ghc--hoogle-parse-results
-         (lambda (result)
-           (setq company-ghc-test-hoogle-candidates-output result)
-           (funcall callback)))))
+      (lambda ()
+        (setq company-ghc-test-hoogle-candidates-output
+              (company-ghc--hoogle-parse-results))))
 
 (Then "^hoogle search candidates are\\(?: \"\\(.*\\)\"\\|:\\)$"
       (lambda (expected)

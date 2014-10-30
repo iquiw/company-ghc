@@ -105,7 +105,7 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
 (make-variable-buffer-local 'company-ghc--imported-modules)
 
 (defun company-ghc--find-context ()
-  "Find search context at the current point."
+  "Find completion context at the current point."
   (cond
    ((company-ghc--in-comment-p)
     (cond
@@ -176,7 +176,6 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
 (defun company-ghc-doc-buffer (candidate)
   "Display documentation in the docbuffer for the given CANDIDATE."
   (with-temp-buffer
-    (erase-buffer)
     (let ((mod (company-ghc--get-module candidate)))
       (call-process company-ghc-hoogle-command nil t nil "search" "--info"
                     (if mod (concat candidate " +" mod) candidate)))
@@ -459,35 +458,27 @@ When called interactively, QUERY is specified in minibuffer."
    (lambda (command &optional arg &rest ignored)
      (cl-case command
        (prefix (company-grab-symbol))
-       (candidates (cons :async
-                         (lambda (callback)
-                           (company-ghc--hoogle-candidates query callback))))
+       (candidates (company-ghc--hoogle-candidates query))
        (meta (company-ghc--get-type arg))
        (doc-buffer (company-ghc-doc-buffer arg))
        (annotation (company-ghc-annotation arg))
        (sorted t)))))
 
-(defun company-ghc--hoogle-candidates (query callback)
-  "Provide hoogle search results for QUERY to CALLBACK asynchronously."
-  (with-current-buffer (get-buffer-create "*company-ghc hoogle results*")
-    (erase-buffer)
-    (set-process-sentinel
-     (start-process "hoogle search" (current-buffer)
-                    company-ghc-hoogle-command "search" "-n"
-                    (number-to-string company-ghc-hoogle-search-limit) query)
-     (lambda (proc _status)
-       (when (eq (process-status proc) 'exit)
-         (with-current-buffer (process-buffer proc)
-           (company-ghc--hoogle-parse-results callback)
-           (kill-buffer)))))))
+(defun company-ghc--hoogle-candidates (query)
+  "Provide hoogle search results for QUERY."
+  (with-temp-buffer
+    (call-process company-ghc-hoogle-command nil t nil
+                  "search"
+                  "-n" (number-to-string company-ghc-hoogle-search-limit)
+                  query)
+    (company-ghc--hoogle-parse-results)))
 
-(defun company-ghc--hoogle-parse-results (callback)
-  "Parse hoogle search results in the current buffer.
-Pass propertized candidates to CALLBACK."
+(defun company-ghc--hoogle-parse-results ()
+  "Parse hoogle search results in the current buffer."
   (let (result)
     (goto-char (point-min))
     (if (looking-at-p "^No results found$")
-        (funcall callback '())
+        '()
       (while (re-search-forward
               "^\\([^[:space:]]+\\) \\([^[:space:]\n]+\\)\\(.*\\)$" nil t)
         (let* ((mod (match-string 1))
@@ -498,7 +489,7 @@ Pass propertized candidates to CALLBACK."
                   (member fun '("class" "data" "module" "newtype" "type")))
             (push (company-ghc--propertize-candidate
                    fun :module mod :type typ) result))))
-      (funcall callback (nreverse result)))))
+      (nreverse result))))
 
 (provide 'company-ghc)
 ;;; company-ghc.el ends here
