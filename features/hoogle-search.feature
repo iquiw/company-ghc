@@ -36,3 +36,12 @@ Feature: Hoogle search
     """
     And I parse hoogle search results
     Then hoogle search candidates are "()"
+
+  Scenario Hoogle database not found
+    Given the buffer is empty
+    When I insert:
+    """
+    Could not find some databases: default
+    """
+    And I parse hoogle search results
+    Then hoogle search candidates are "()"

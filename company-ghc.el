@@ -4,7 +4,7 @@
 
 ;; Author:    Iku Iwasa <iku.iwasa@gmail.com>
 ;; URL:       https://github.com/iquiw/company-ghc
-;; Version:   0.1.7
+;; Version:   0.1.8
 ;; Package-Requires: ((cl-lib "0.5") (company "0.8.0") (ghc "4.1.1") (emacs "24"))
 ;; Keywords:  haskell, completion
 ;; Stability: experimental
@@ -477,7 +477,8 @@ When called interactively, QUERY is specified in minibuffer."
   "Parse hoogle search results in the current buffer."
   (let (result)
     (goto-char (point-min))
-    (if (looking-at-p "^No results found$")
+    (if (or (looking-at-p "^No results found$")
+            (looking-at-p "^Could not find some databases:"))
         '()
       (while (re-search-forward
               "^\\([^[:space:]]+\\) \\([^[:space:]\n]+\\)\\(.*\\)$" nil t)
