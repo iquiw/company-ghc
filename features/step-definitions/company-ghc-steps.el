@@ -57,8 +57,9 @@
        (lambda (table)
          (let ((rows (cdr table)))
            (dolist (row rows)
-             (set (ghc-module-symbol (car row))
-                  (split-string (cadr row) "[[:space:]\n]+"))))))
+             (puthash (car row)
+                      (split-string (cadr row) "[[:space:]\n]+")
+                      company-ghc--module-cache)))))
 
 ;;
 ;; Given these imported modules:

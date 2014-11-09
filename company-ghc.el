@@ -4,8 +4,8 @@
 
 ;; Author:    Iku Iwasa <iku.iwasa@gmail.com>
 ;; URL:       https://github.com/iquiw/company-ghc
-;; Version:   0.1.8
-;; Package-Requires: ((cl-lib "0.5") (company "0.8.0") (ghc "4.1.1") (emacs "24"))
+;; Version:   0.2.0
+;; Package-Requires: ((cl-lib "0.5") (company "0.8.0") (ghc "5.1.0") (emacs "24"))
 ;; Keywords:  haskell, completion
 ;; Stability: experimental
 
@@ -103,6 +103,7 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
 (defvar company-ghc--propertized-modules '())
 (defvar company-ghc--imported-modules '())
 (make-variable-buffer-local 'company-ghc--imported-modules)
+(defvar company-ghc--module-cache (make-hash-table :test 'equal))
 
 (defun company-ghc--find-context ()
   "Find completion context at the current point."
@@ -160,19 +161,27 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
 
 (defun company-ghc-meta (candidate)
   "Show type info for the given CANDIDATE."
-  (when company-ghc-show-info
-    (let* ((mod (company-ghc--get-module candidate))
-           (pair (and mod (assoc-string mod company-ghc--imported-modules)))
-           (qualifier (or (cdr pair) mod)))
-      (when qualifier
-        (let ((info (ghc-get-info (concat qualifier "." candidate))))
-          (pcase company-ghc-show-info
-            (`t info)
-            (`oneline (replace-regexp-in-string "\n" "" info))
-            (`nomodule
-             (when (string-match "\\(?:[^[:space:]]+\\.\\)?\\([^\t]+\\)\t" info)
-               (replace-regexp-in-string
-                "\n" "" (match-string-no-properties 1 info))))))))))
+  (or (company-ghc--get-type candidate)
+      (when company-ghc-show-info
+        (let ((typ (company-ghc--info candidate)))
+          (when typ
+            (put-text-property 0 1 :type typ candidate))
+          typ))))
+
+(defun company-ghc--info (candidate)
+  "Show type info for the given CANDIDATE by `ghc-show-info'."
+  (let* ((mod (company-ghc--get-module candidate))
+         (pair (and mod (assoc-string mod company-ghc--imported-modules)))
+         (qualifier (or (cdr pair) mod)))
+    (when qualifier
+      (let ((info (ghc-get-info (concat qualifier "." candidate))))
+        (pcase company-ghc-show-info
+          (`t info)
+          (`oneline (replace-regexp-in-string "\n" "" info))
+          (`nomodule
+           (when (string-match "\\(?:[^[:space:]]+\\.\\)?\\([^\t]+\\)\t" info)
+             (replace-regexp-in-string
+              "\n" "" (match-string-no-properties 1 info)))))))))
 
 (defun company-ghc-doc-buffer (candidate)
   "Display documentation in the docbuffer for the given CANDIDATE."
@@ -199,18 +208,19 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
           'string<)))
 
 (defun company-ghc--get-module-keywords (mod)
-  "Get defined keywords in the specified module MOD."
-  (let ((sym (ghc-module-symbol mod))
-        result)
-    (when (and (not (boundp sym))
-               (listp (setq result (ghc-load-module mod))))
-      (set sym result))
-    (when (boundp sym)
-      (if (member mod company-ghc--propertized-modules)
-          (ghc-module-keyword mod)
-        (push mod company-ghc--propertized-modules)
-        (mapcar (lambda (k) (company-ghc--set-module k mod))
-                (ghc-module-keyword mod))))))
+  "Get names defined in the specified module MOD.
+Return cached data if any."
+  (let ((funs (gethash mod company-ghc--module-cache)))
+    (unless funs
+      (setq funs (mapcar
+                  (lambda (s)
+                    (if (string-match "\\(.*?\\) ::" s)
+                        (company-ghc--propertize-candidate
+                         (match-string 1 s) :module mod :type s)
+                      (company-ghc--propertize-candidate s :module mod)))
+                  (ghc-sync-process (concat "browse -d " mod "\n"))))
+      (puthash mod funs company-ghc--module-cache))
+    funs))
 
 (defun company-ghc--get-module (s)
   "Get module name from the keyword S."
@@ -416,9 +426,8 @@ Provide completion info according to COMMAND and ARG.  IGNORED, not used."
       (cl-dolist (pair mods)
         (let* ((mod (car pair))
                (alias (cdr pair))
-               (sym (ghc-module-symbol mod))
-               (len (or (and (boundp sym)
-                             (length (ghc-module-keyword mod)))
+               (funs (gethash mod company-ghc--module-cache))
+               (len (or (and funs (length funs))
                         nil)))
           (insert mod)
           (move-to-column 40 t)
