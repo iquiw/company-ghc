@@ -160,18 +160,19 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
 
 (defun company-ghc-meta (candidate)
   "Show type info for the given CANDIDATE."
-  (let* ((mod (company-ghc--get-module candidate))
-         (pair (and mod (assoc-string mod company-ghc--imported-modules)))
-         (qualifier (or (and pair (cdr pair)) mod)))
-    (when qualifier
-      (let ((info (ghc-get-info (concat qualifier "." candidate))))
-        (pcase company-ghc-show-info
-          (`t info)
-          (`oneline (replace-regexp-in-string "\n" "" info))
-          (`nomodule
-           (when (string-match "\\(?:[^[:space:]]+\\.\\)?\\([^\t]+\\)\t" info)
-             (replace-regexp-in-string
-              "\n" "" (match-string-no-properties 1 info)))))))))
+  (when company-ghc-show-info
+    (let* ((mod (company-ghc--get-module candidate))
+           (pair (and mod (assoc-string mod company-ghc--imported-modules)))
+           (qualifier (or (cdr pair) mod)))
+      (when qualifier
+        (let ((info (ghc-get-info (concat qualifier "." candidate))))
+          (pcase company-ghc-show-info
+            (`t info)
+            (`oneline (replace-regexp-in-string "\n" "" info))
+            (`nomodule
+             (when (string-match "\\(?:[^[:space:]]+\\.\\)?\\([^\t]+\\)\t" info)
+               (replace-regexp-in-string
+                "\n" "" (match-string-no-properties 1 info))))))))))
 
 (defun company-ghc-doc-buffer (candidate)
   "Display documentation in the docbuffer for the given CANDIDATE."
