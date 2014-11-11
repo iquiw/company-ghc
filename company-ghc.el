@@ -71,10 +71,10 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
   "Specify limit of hoogle search results."
   :type 'number)
 
-(defconst company-ghc-pragma-regexp "{-#[[:space:]]+\\([[:upper:]]+\\>\\|\\)")
+(defconst company-ghc-pragma-regexp "{-#[[:space:]]*\\([[:upper:]]+\\>\\|\\)")
 
 (defconst company-ghc-langopt-regexp
-  (concat "{-#[[:space:]\n]+\\(LANGUAGE\\|OPTIONS_GHC\\)[[:space:]\n]+"
+  (concat "{-#[[:space:]\n]*\\(LANGUAGE\\|OPTIONS_GHC\\)[[:space:]\n]+"
           "\\(?:[^[:space:]]+,[[:space:]\n]*\\)*"
           "\\([^[:space:]]+\\_>\\|\\)"))
 
@@ -132,6 +132,10 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
   (let ((ppss (syntax-ppss)))
     (cond
      ((nth 3 ppss) 'stop)
+     ((nth 4 ppss)
+      (if (looking-back company-ghc-pragma-regexp)
+          (match-string-no-properties 1)
+        (company-grab "[[:space:]]\\([^[:space:]]*\\)" 1)))
      ((looking-back "^[^[:space:]]*") nil)
      ((let ((case-fold-search nil))
         (and (save-excursion
@@ -478,9 +482,8 @@ When called interactively, QUERY is specified in minibuffer."
   "Parse hoogle search results in the current buffer."
   (let (result)
     (goto-char (point-min))
-    (if (or (looking-at-p "^No results found$")
-            (looking-at-p "^Could not find some databases:"))
-        '()
+    (unless (or (looking-at-p "^No results found$")
+                (looking-at-p "^Could not find some databases:"))
       (while (re-search-forward
               "^\\([^[:space:]]+\\) \\([^[:space:]\n]+\\)\\(.*\\)$" nil t)
         (let* ((mod (match-string 1))
