@@ -143,6 +143,8 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
                (not (looking-at-p "^import\\>")))
              (looking-back company-ghc-qualified-keyword-regexp)))
       (cons (match-string-no-properties 2) t))
+     ((looking-back "[[:word:].]*" nil t)
+      (match-string-no-properties 0))
      (t (company-grab-symbol)))))
 
 (defun company-ghc-candidates (prefix)

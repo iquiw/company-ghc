@@ -164,6 +164,15 @@ Feature: company-ghc prefix
     And I execute company-ghc prefix command at current point
     Then company-ghc prefix is "someFunc"
 
+        Given the buffer is empty
+    When I insert:
+    """
+    main = do
+        some$func
+    """
+    And I execute company-ghc prefix command at current point
+    Then company-ghc prefix is "func"
+
   Scenario: Stopping prefix
     Given the buffer is empty
     When I insert:
