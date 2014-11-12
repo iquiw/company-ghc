@@ -81,6 +81,14 @@ Feature: company-ghc prefix
     When I insert:
     """
     {-# LANGUAGE SomeFeature,
+    """
+    And I execute company-ghc prefix command at current point
+    Then company-ghc prefix is ""
+
+    Given the buffer is empty
+    When I insert:
+    """
+    {-# LANGUAGE SomeFeature,
                  AnotherFeature
     """
     And I execute company-ghc prefix command at current point

@@ -135,7 +135,7 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
      ((nth 4 ppss)
       (if (looking-back company-ghc-pragma-regexp)
           (match-string-no-properties 1)
-        (company-grab "[[:space:]]\\([^[:space:]]*\\)" 1)))
+        (company-grab "[[:space:],]\\([^[:space:]]*\\)" 1)))
      ((looking-back "^[^[:space:]]*") nil)
      ((let ((case-fold-search nil))
         (and (save-excursion
