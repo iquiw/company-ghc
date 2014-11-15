@@ -71,10 +71,10 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
   "Specify limit of hoogle search results."
   :type 'number)
 
-(defconst company-ghc-pragma-regexp "{-#[[:space:]]+\\([[:upper:]]+\\>\\|\\)")
+(defconst company-ghc-pragma-regexp "{-#[[:space:]]*\\([[:upper:]]+\\>\\|\\)")
 
 (defconst company-ghc-langopt-regexp
-  (concat "{-#[[:space:]\n]+\\(LANGUAGE\\|OPTIONS_GHC\\)[[:space:]\n]+"
+  (concat "{-#[[:space:]\n]*\\(LANGUAGE\\|OPTIONS_GHC\\)[[:space:]\n]+"
           "\\(?:[^[:space:]]+,[[:space:]\n]*\\)*"
           "\\([^[:space:]]+\\_>\\|\\)"))
 
@@ -133,6 +133,10 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
   (let ((ppss (syntax-ppss)))
     (cond
      ((nth 3 ppss) 'stop)
+     ((nth 4 ppss)
+      (if (looking-back company-ghc-pragma-regexp)
+          (match-string-no-properties 1)
+        (company-grab "[[:space:],]\\([^[:space:]]*\\)" 1)))
      ((looking-back "^[^[:space:]]*") nil)
      ((let ((case-fold-search nil))
         (and (save-excursion
@@ -140,6 +144,8 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
                (not (looking-at-p "^import\\>")))
              (looking-back company-ghc-qualified-keyword-regexp)))
       (cons (match-string-no-properties 2) t))
+     ((looking-back "[[:word:].]*" nil t)
+      (match-string-no-properties 0))
      (t (company-grab-symbol)))))
 
 (defun company-ghc-candidates (prefix)
@@ -160,7 +166,7 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
           (mapcar 'car company-ghc--imported-modules))))))
 
 (defun company-ghc-meta (candidate)
-  "Show type info for the given CANDIDATE."
+  "Show type info for the given CANDIDATE. Use cached info if any."
   (or (company-ghc--get-type candidate)
       (when company-ghc-show-info
         (let ((typ (company-ghc--info candidate)))
@@ -255,15 +261,15 @@ Return cached data if any."
       (setq company-ghc--imported-modules mod-alist))))
 
 (defun company-ghc-turn-on-autoscan ()
-  "Turn on automatic scan module after save."
+  "Turn on automatic scan module after save in the current buffer."
   (interactive)
-  (add-hook 'after-save-hook 'company-ghc-scan-modules nil t)
+  (add-hook 'after-save-hook #'company-ghc-scan-modules nil t)
   (message "company-ghc autoscan is enabled"))
 
 (defun company-ghc-turn-off-autoscan ()
-  "Turn off automatic scan module after save."
+  "Turn off automatic scan module after save in the current buffer."
   (interactive)
-  (remove-hook 'after-save-hook 'company-ghc-scan-modules t)
+  (remove-hook 'after-save-hook #'company-ghc-scan-modules t)
   (message "company-ghc autoscan is disabled"))
 
 (defun company-ghc--scan-impdecl ()
@@ -365,7 +371,7 @@ If the line is less offset than OFFSET, it finishes the search."
       (setq knd 'constructor))
      (t
       (setq knd 'identifier)))
-    (apply 'add-text-properties
+    (apply #'add-text-properties
            0 1 (append (list :kind knd) props) (list candidate))
     candidate))
 
@@ -487,9 +493,8 @@ When called interactively, QUERY is specified in minibuffer."
   "Parse hoogle search results in the current buffer."
   (let (result)
     (goto-char (point-min))
-    (if (or (looking-at-p "^No results found$")
-            (looking-at-p "^Could not find some databases:"))
-        '()
+    (unless (or (looking-at-p "^No results found$")
+                (looking-at-p "^Could not find some databases:"))
       (while (re-search-forward
               "^\\([^[:space:]]+\\) \\([^[:space:]\n]+\\)\\(.*\\)$" nil t)
         (let* ((mod (match-string 1))

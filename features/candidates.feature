@@ -61,6 +61,11 @@ Feature: company-ghc candidates
     And I execute company-ghc candidates command at current point
     Then company-ghc candidates are "("NoCPP" "NoPostfixOperators")"
 
+    Given the buffer is empty
+    When I insert "{-#LANGUAGE C"
+    And I execute company-ghc candidates command at current point
+    Then company-ghc candidates are "("CPP")"
+
   Scenario: OPTIONS_GHC candidates
     Given the buffer is empty
     Given these GHC option flags:

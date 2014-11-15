@@ -4,8 +4,42 @@ Feature: company-ghc prefix
     Given the buffer is empty
     When I insert:
     """
+    {-#
+    """
+    And I execute company-ghc prefix command at current point
+    Then company-ghc prefix is ""
+
+    Given the buffer is empty
+    When I insert:
+    """
+    {-##-}
+    """
+    And I place the cursor before "#-}"
+    And I execute company-ghc prefix command at current point
+    Then company-ghc prefix is ""
+
+    Given the buffer is empty
+    When I insert:
+    """
     {-# SomePrefix
     """
+    And I execute company-ghc prefix command at current point
+    Then company-ghc prefix is "SomePrefix"
+
+    Given the buffer is empty
+    When I insert:
+    """
+    {-#SomePrefix
+    """
+    And I execute company-ghc prefix command at current point
+    Then company-ghc prefix is "SomePrefix"
+
+    Given the buffer is empty
+    When I insert:
+    """
+    {-#SomePrefix#-}
+    """
+    And I place the cursor before "#-}"
     And I execute company-ghc prefix command at current point
     Then company-ghc prefix is "SomePrefix"
 
@@ -21,7 +55,41 @@ Feature: company-ghc prefix
     Given the buffer is empty
     When I insert:
     """
+    {-#LANGUAGE SomeFeature
+    """
+    And I execute company-ghc prefix command at current point
+    Then company-ghc prefix is "SomeFeature"
+
+    Given the buffer is empty
+    When I insert:
+    """
+    {-#LANGUAGE SomeFeature#-}
+    """
+    And I place the cursor before "#-}"
+    And I execute company-ghc prefix command at current point
+    Then company-ghc prefix is "SomeFeature"
+
+    Given the buffer is empty
+    When I insert:
+    """
     {-# LANGUAGE SomeFeature, AnotherFeature
+    """
+    And I execute company-ghc prefix command at current point
+    Then company-ghc prefix is "AnotherFeature"
+
+    Given the buffer is empty
+    When I insert:
+    """
+    {-# LANGUAGE SomeFeature,
+    """
+    And I execute company-ghc prefix command at current point
+    Then company-ghc prefix is ""
+
+    Given the buffer is empty
+    When I insert:
+    """
+    {-# LANGUAGE SomeFeature,
+                 AnotherFeature
     """
     And I execute company-ghc prefix command at current point
     Then company-ghc prefix is "AnotherFeature"
@@ -95,6 +163,15 @@ Feature: company-ghc prefix
     """
     And I execute company-ghc prefix command at current point
     Then company-ghc prefix is "someFunc"
+
+        Given the buffer is empty
+    When I insert:
+    """
+    main = do
+        some$func
+    """
+    And I execute company-ghc prefix command at current point
+    Then company-ghc prefix is "func"
 
   Scenario: Stopping prefix
     Given the buffer is empty
