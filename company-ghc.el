@@ -259,15 +259,15 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
       (setq company-ghc--imported-modules mod-alist))))
 
 (defun company-ghc-turn-on-autoscan ()
-  "Turn on automatic scan module after save."
+  "Turn on automatic scan module after save in the current buffer."
   (interactive)
-  (add-hook 'after-save-hook 'company-ghc-scan-modules nil t)
+  (add-hook 'after-save-hook #'company-ghc-scan-modules nil t)
   (message "company-ghc autoscan is enabled"))
 
 (defun company-ghc-turn-off-autoscan ()
-  "Turn off automatic scan module after save."
+  "Turn off automatic scan module after save in the current buffer."
   (interactive)
-  (remove-hook 'after-save-hook 'company-ghc-scan-modules t)
+  (remove-hook 'after-save-hook #'company-ghc-scan-modules t)
   (message "company-ghc autoscan is disabled"))
 
 (defun company-ghc--scan-impdecl ()
@@ -369,7 +369,7 @@ If the line is less offset than OFFSET, it finishes the search."
       (setq knd 'constructor))
      (t
       (setq knd 'identifier)))
-    (apply 'add-text-properties
+    (apply #'add-text-properties
            0 1 (append (list :kind knd) props) (list candidate))
     candidate))
 
