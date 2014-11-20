@@ -1,6 +1,6 @@
-======================
- Company GHC |travis|
-======================
+==============================
+ Company GHC |travis| |melpa|
+==============================
 
 .. contents:: Table of Contents
 .. sectnum::
@@ -214,3 +214,5 @@ Licensed under the GPL 3+ license.
 .. _MELPA: http://melpa.milkbox.net/
 .. |travis| image:: https://api.travis-ci.org/iquiw/company-ghc.svg?branch=master
             :target: https://travis-ci.org/iquiw/company-ghc
+.. |melpa| image:: http://melpa.org/packages/company-ghc-badge.svg
+           :target: http://melpa.org/#/company-ghc
