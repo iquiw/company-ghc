@@ -180,13 +180,14 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
          (qualifier (or (cdr pair) mod)))
     (when qualifier
       (let ((info (ghc-get-info (concat qualifier "." candidate))))
-        (pcase company-ghc-show-info
-          (`t info)
-          (`oneline (replace-regexp-in-string "\n" "" info))
-          (`nomodule
-           (when (string-match "\\(?:[^[:space:]]+\\.\\)?\\([^\t]+\\)\t" info)
-             (replace-regexp-in-string
-              "\n" "" (match-string-no-properties 1 info)))))))))
+        (when (stringp info)
+          (pcase company-ghc-show-info
+            (`t info)
+            (`oneline (replace-regexp-in-string "\n" "" info))
+            (`nomodule
+             (when (string-match "\\(?:[^[:space:]]+\\.\\)?\\([^\t]+\\)\t" info)
+               (replace-regexp-in-string
+                "\n" "" (match-string-no-properties 1 info))))))))))
 
 (defun company-ghc-doc-buffer (candidate)
   "Display documentation in the docbuffer for the given CANDIDATE."
