@@ -166,16 +166,16 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
 
 (defun company-ghc-meta (candidate)
   "Show type info for the given CANDIDATE. Use cached info if any."
-  (or (company-ghc--get-type candidate)
+  (or (company-ghc--pget candidate :type)
       (when company-ghc-show-info
         (let ((typ (company-ghc--info candidate)))
           (when typ
-            (put-text-property 0 1 :type typ candidate))
+            (company-ghc--pset candidate :type typ))
           typ))))
 
 (defun company-ghc--info (candidate)
   "Show type info for the given CANDIDATE by `ghc-show-info'."
-  (let* ((mod (company-ghc--get-module candidate))
+  (let* ((mod (company-ghc--pget candidate :module))
          (pair (and mod (assoc-string mod company-ghc--imported-modules)))
          (qualifier (or (cdr pair) mod)))
     (when qualifier
@@ -192,7 +192,7 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
 (defun company-ghc-doc-buffer (candidate)
   "Display documentation in the docbuffer for the given CANDIDATE."
   (with-temp-buffer
-    (let ((mod (company-ghc--get-module candidate)))
+    (let ((mod (company-ghc--pget candidate :module)))
       (call-process company-ghc-hoogle-command nil t nil "search" "--info"
                     (if mod (concat candidate " +" mod) candidate)))
     (company-doc-buffer
@@ -201,7 +201,7 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
 (defun company-ghc-annotation (candidate)
   "Show module name as annotation where the given CANDIDATE is defined."
   (when company-ghc-show-module
-    (concat " " (company-ghc--get-module candidate))))
+    (concat " " (company-ghc--pget candidate :module))))
 
 (defun company-ghc--gather-candidates (prefix mods)
   "Gather candidates for PREFIX from keywords in MODS and return them sorted."
@@ -224,21 +224,17 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
       (if (member mod company-ghc--propertized-modules)
           (ghc-module-keyword mod)
         (push mod company-ghc--propertized-modules)
-        (mapcar (lambda (k) (company-ghc--set-module k mod))
+        (mapcar (lambda (k) (company-ghc--pset k :module mod))
                 (ghc-module-keyword mod))))))
 
-(defun company-ghc--get-module (s)
-  "Get module name from the keyword S."
-  (get-text-property 0 :module s))
+(defun company-ghc--pget (s prop)
+  "Get property value of PROP from the keyword S."
+  (get-text-property 0 prop s))
 
-(defun company-ghc--set-module (s mod)
-  "Set module name of the keywork S to the module MOD."
-  (put-text-property 0 1 :module mod s)
+(defun company-ghc--pset (s prop val)
+  "Set property PROP of the keywork S to VAL."
+  (put-text-property 0 1 prop val s)
   s)
-
-(defun company-ghc--get-type (s)
-  "Get type of the keyword S."
-  (get-text-property 0 :type s))
 
 ;;
 ;; import module parsing
@@ -382,7 +378,7 @@ Provide completion info according to COMMAND and ARG.  IGNORED, not used."
   (cl-case command
     (init (when (and (derived-mode-p 'haskell-mode) company-ghc-autoscan)
             (company-ghc-scan-modules)
-            (add-hook 'after-save-hook 'company-ghc-scan-modules nil t)))
+            (add-hook 'after-save-hook #'company-ghc-scan-modules nil t)))
     (interactive (company-begin-backend 'company-ghc))
     (prefix (and (derived-mode-p 'haskell-mode)
                  (company-ghc-prefix)))
@@ -475,7 +471,7 @@ When called interactively, QUERY is specified in minibuffer."
      (cl-case command
        (prefix (company-grab-symbol))
        (candidates (company-ghc--hoogle-candidates query))
-       (meta (company-ghc--get-type arg))
+       (meta (company-ghc--pget arg :type))
        (doc-buffer (company-ghc-doc-buffer arg))
        (annotation (company-ghc-annotation arg))
        (sorted t)))))
