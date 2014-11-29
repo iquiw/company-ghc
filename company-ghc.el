@@ -181,6 +181,13 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
     (when qualifier
       (let ((info (ghc-get-info (concat qualifier "." candidate))))
         (when (stringp info)
+          (when (string-match
+                 "-- Defined at \\(.*\\):\\([[:digit:]]+\\):[[:digit:]]+$"
+                 info)
+            (company-ghc--pset candidate :location
+                               (cons (match-string-no-properties 1 info)
+                                     (string-to-number
+                                      (match-string-no-properties 2 info)))))
           (pcase company-ghc-show-info
             (`t info)
             (`oneline (replace-regexp-in-string "\n" "" info))
@@ -188,6 +195,10 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
              (when (string-match "\\(?:[^[:space:]]+\\.\\)?\\([^\t]+\\)\t" info)
                (replace-regexp-in-string
                 "\n" "" (match-string-no-properties 1 info))))))))))
+
+(defun company-ghc-location (candidate)
+  "Return cons of file path and line number of CANDIDATE."
+  (company-ghc--pget candidate :location))
 
 (defun company-ghc-doc-buffer (candidate)
   "Display documentation in the docbuffer for the given CANDIDATE."
@@ -385,6 +396,7 @@ Provide completion info according to COMMAND and ARG.  IGNORED, not used."
     (candidates (company-ghc-candidates arg))
     (meta (company-ghc-meta arg))
     (doc-buffer (company-ghc-doc-buffer arg))
+    (location (company-ghc-location arg))
     (annotation (company-ghc-annotation arg))
     (sorted t)))
 
