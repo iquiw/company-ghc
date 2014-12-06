@@ -139,7 +139,7 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
      ((looking-back "^[^[:space:]]*") nil)
      ((let ((case-fold-search nil))
         (and (save-excursion
-               (beginning-of-line)
+               (forward-line 0)
                (not (looking-at-p "^import\\>")))
              (looking-back company-ghc-qualified-keyword-regexp)))
       (cons (match-string-no-properties 2) t))
