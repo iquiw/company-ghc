@@ -119,6 +119,12 @@ Display Hoogle document as doc-buffer
   .. image:: images/doc-buffer.png
      :alt: Display documentation in docbuffer
 
+Locate source
+-------------
+* When a function in the local project is selected as completion candidate,
+  pressing ``C-w`` (``company-show-location``) shows its source.
+  It uses information from ``ghc-mod info``, and works only when ``company-ghc-show-info`` is non-nil.
+
 Special completion command
 --------------------------
 1. In-module completion (``M-x company-ghc-complete-in-module``)
