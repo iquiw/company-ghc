@@ -1,6 +1,6 @@
-======================
- Company GHC |travis|
-======================
+==============================
+ Company GHC |travis| |melpa|
+==============================
 
 .. contents:: Table of Contents
 .. sectnum::
@@ -119,6 +119,12 @@ Display Hoogle document as doc-buffer
   .. image:: images/doc-buffer.png
      :alt: Display documentation in docbuffer
 
+Locate source
+-------------
+* When a function in the local project is selected as completion candidate,
+  pressing ``C-w`` (``company-show-location``) shows its source.
+  It uses information from ``ghc-mod info``, and works only when ``company-ghc-show-info`` is non-nil.
+
 Special completion command
 --------------------------
 1. In-module completion (``M-x company-ghc-complete-in-module``)
@@ -214,3 +220,5 @@ Licensed under the GPL 3+ license.
 .. _MELPA: http://melpa.milkbox.net/
 .. |travis| image:: https://api.travis-ci.org/iquiw/company-ghc.svg?branch=master
             :target: https://travis-ci.org/iquiw/company-ghc
+.. |melpa| image:: http://melpa.org/packages/company-ghc-badge.svg
+           :target: http://melpa.org/#/company-ghc
