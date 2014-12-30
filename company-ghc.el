@@ -76,7 +76,7 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
 (defconst company-ghc-langopt-regexp
   (concat "{-#[[:space:]\n]*\\(LANGUAGE\\|OPTIONS_GHC\\)[[:space:]\n]+"
           "\\(?:[^[:space:]]+,[[:space:]\n]*\\)*"
-          "\\([^[:space:]]+\\_>\\|\\)"))
+          "\\([^[:space:]]+\\|\\)"))
 
 (defconst company-ghc-import-regexp
   (concat "import[[:space:]\n]+"
@@ -112,7 +112,8 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
      ((company-grab company-ghc-pragma-regexp)
       '(pragma))
      ((company-grab company-ghc-langopt-regexp)
-      (cons 'langopt (match-string-no-properties 1)))))
+      (and (looking-at-p "\\([#, [:space:]]\\|$\\)")
+           (cons 'langopt (match-string-no-properties 1))))))
 
    ((company-grab company-ghc-impdecl-regexp)
     (cons 'impspec (match-string-no-properties 1)))
