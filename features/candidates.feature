@@ -66,6 +66,12 @@ Feature: company-ghc candidates
     And I execute company-ghc candidates command at current point
     Then company-ghc candidates are "("CPP")"
 
+    Given the buffer is empty
+    When I insert "{-#LANGUAGE C#-}"
+    And I place the cursor after "C"
+    And I execute company-ghc candidates command at current point
+    Then company-ghc candidates are "("CPP")"
+
   Scenario: OPTIONS_GHC candidates
     Given the buffer is empty
     Given these GHC option flags:

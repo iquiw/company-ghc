@@ -1,6 +1,6 @@
 ;;; company-ghc.el --- company-mode ghc-mod backend -*- lexical-binding: t -*-
 
-;; Copyright (C) 2014 by Iku Iwasa
+;; Copyright (C) 2014-2015 by Iku Iwasa
 
 ;; Author:    Iku Iwasa <iku.iwasa@gmail.com>
 ;; URL:       https://github.com/iquiw/company-ghc
@@ -76,14 +76,14 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
 (defconst company-ghc-langopt-regexp
   (concat "{-#[[:space:]\n]*\\(LANGUAGE\\|OPTIONS_GHC\\)[[:space:]\n]+"
           "\\(?:[^[:space:]]+,[[:space:]\n]*\\)*"
-          "\\([^[:space:]]+\\_>\\|\\)"))
+          "\\([^[:space:]]+\\|\\)"))
 
 (defconst company-ghc-import-regexp
   (concat "import[[:space:]\n]+"
           "\\(?:safe[[:space:]\n]+\\)?"
           "\\(?:qualified[[:space:]\n]+\\)?"
           "\\(?:\"[^\"]+\"[[:space:]\n]+\\)?"
-          "\\([[:word:].]+\\_>\\|\\)"))
+          "\\([[:word:].]+\\|\\)"))
 
 (defconst company-ghc-impdecl-regexp
   (concat company-ghc-import-regexp
@@ -94,11 +94,6 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
 
 (defconst company-ghc-module-regexp
   "module[[:space:]]*\\([[:word:].]+\\_>\\|\\)")
-
-(defconst company-ghc-qualified-keyword-regexp
-  (concat
-   "\\_<\\([[:upper:]][[:alnum:].]*\\)\\."
-   "\\([[:word:]]+\\_>\\|\\)"))
 
 (defvar company-ghc--propertized-modules '())
 (defvar company-ghc--imported-modules '())
@@ -113,7 +108,8 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
      ((company-grab company-ghc-pragma-regexp)
       '(pragma))
      ((company-grab company-ghc-langopt-regexp)
-      (cons 'langopt (match-string-no-properties 1)))))
+      (and (looking-at-p "\\([#, [:space:]]\\|$\\)")
+           (cons 'langopt (match-string-no-properties 1))))))
 
    ((company-grab company-ghc-impdecl-regexp)
     (cons 'impspec (match-string-no-properties 1)))
@@ -122,15 +118,14 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
 
    ((company-grab company-ghc-module-regexp) '(module))
 
-   ((let ((case-fold-search nil))
-      (looking-back company-ghc-qualified-keyword-regexp))
-    (cons 'qualified (match-string-no-properties 1)))
-
-   (t '(keyword))))
+   (t (let ((qcons (company-ghc--grab-qualified)))
+        (if qcons
+            (cons 'qualified (car qcons))
+          '(keyword))))))
 
 (defun company-ghc-prefix ()
   "Provide completion prefix at the current point."
-  (let ((ppss (syntax-ppss)))
+  (let ((ppss (syntax-ppss)) match)
     (cond
      ((nth 3 ppss) 'stop)
      ((nth 4 ppss)
@@ -142,9 +137,9 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
         (and (save-excursion
                (forward-line 0)
                (not (looking-at-p "^import\\>")))
-             (looking-back company-ghc-qualified-keyword-regexp)))
-      (cons (match-string-no-properties 2) t))
-     ((looking-back "[[:word:].]*\\>" nil t)
+             (setq match (company-ghc--grab-qualified))))
+      (cons (cdr match) t))
+     ((looking-back "[[:word:].]*" nil t)
       (match-string-no-properties 0))
      (t (company-grab-symbol)))))
 
@@ -239,15 +234,6 @@ Return cached data if any."
                   (ghc-sync-process (concat "browse -d " mod "\n"))))
       (puthash mod funs company-ghc--module-cache))
     funs))
-
-(defun company-ghc--pget (s prop)
-  "Get property value of PROP from the keyword S."
-  (get-text-property 0 prop s))
-
-(defun company-ghc--pset (s prop val)
-  "Set property PROP of the keywork S to VAL."
-  (put-text-property 0 1 prop val s)
-  s)
 
 ;;
 ;; import module parsing
@@ -347,13 +333,22 @@ If the line is less offset than OFFSET, it finishes the search."
        ((looking-at-p "\"")
         (re-search-forward "\"\\([^\"]\\|\\\\\"\\)*\"")
         (throw 'result (match-string-no-properties 0)))
-       ((re-search-forward "\\=.[[:alnum:].]*\\_>" nil t)
+       ((re-search-forward "\\=.[[:alnum:].]*" nil t)
         (throw 'result (match-string-no-properties 0)))
        (t (throw 'result nil))))))
 
 ;;
 ;; Unitilities
 ;;
+(defun company-ghc--pget (s prop)
+  "Get property value of PROP from the keyword S."
+  (get-text-property 0 prop s))
+
+(defun company-ghc--pset (s prop val)
+  "Set property PROP of the keywork S to VAL."
+  (put-text-property 0 1 prop val s)
+  s)
+
 (defun company-ghc--in-comment-p ()
   "Return whether the point is in comment or not."
   (let ((ppss (syntax-ppss))) (nth 4 ppss)))
@@ -382,6 +377,26 @@ If the line is less offset than OFFSET, it finishes the search."
     (apply #'add-text-properties
            0 1 (append (list :kind knd) props) (list candidate))
     candidate))
+
+(defun company-ghc--grab-qualified ()
+  "Grab cons of qualified specifier and keyword backward from the current point.
+Return nil if none found."
+  (save-excursion
+    (let ((prefix
+           (buffer-substring-no-properties
+            (point)
+            (progn
+              (skip-chars-backward "[:word:]")
+              (point))))
+          (case-fold-search nil)
+          end)
+      (setq end (- (point) 1))
+      (when (and (equal (char-before) ?.)
+                 (< (skip-chars-backward ".[:word:]") 0)
+                 (looking-at-p "[[:upper:]]"))
+        (cons
+         (buffer-substring-no-properties (point) end)
+         prefix)))))
 
 ;;;###autoload
 (defun company-ghc (command &optional arg &rest ignored)
