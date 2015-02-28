@@ -6,4 +6,4 @@
 (development
  (depends-on "ecukes")
  (depends-on "espuds")
- (depends-on "haskell-mode" :git "https://github.com/haskell/haskell-mode.git" :ref "fcb48c7"))
+ (depends-on "haskell-mode"))
