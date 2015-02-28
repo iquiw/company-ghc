@@ -232,7 +232,9 @@ Return cached data if any."
                          (match-string 1 s) :module mod :type s)
                       (company-ghc--propertize-candidate s :module mod)))
                   (ghc-sync-process (concat "browse -d " mod "\n"))))
-      (puthash mod funs company-ghc--module-cache))
+      (if (listp funs)
+          (puthash mod funs company-ghc--module-cache)
+        (setq funs nil)))
     funs))
 
 ;;
