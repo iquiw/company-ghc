@@ -346,7 +346,7 @@ If the line is less offset than OFFSET, it finishes the search."
        ((looking-at-p "\"")
         (re-search-forward "\"\\([^\"]\\|\\\\\"\\)*\"")
         (throw 'result (match-string-no-properties 0)))
-       ((re-search-forward "\\=.[[:alnum:].]*\\_>" nil t)
+       ((re-search-forward "\\=.[[:alnum:].]*" nil t)
         (throw 'result (match-string-no-properties 0)))
        (t (throw 'result nil))))))
 

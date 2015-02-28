@@ -83,7 +83,7 @@
          (insert "{-# LANGUAGE OverloadedStrings #-}\n
 module Main where
 
-@IMPORT@
+__IMPORT__
 
 foo :: Int
 foo = 1
@@ -98,7 +98,7 @@ main = do
       (lambda (tmpl var)
         (save-excursion
           (goto-char (point-min))
-          (when (re-search-forward (concat "\\_<@" tmpl "@\\_>"))
+          (when (re-search-forward (concat "\\_<__" tmpl "__\\_>"))
             (delete-region (match-beginning 0) (match-end 0))
             (insert var)))))
 
