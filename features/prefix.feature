@@ -164,7 +164,7 @@ Feature: company-ghc prefix
     And I execute company-ghc prefix command at current point
     Then company-ghc prefix is "someFunc"
 
-        Given the buffer is empty
+    Given the buffer is empty
     When I insert:
     """
     main = do
@@ -172,6 +172,15 @@ Feature: company-ghc prefix
     """
     And I execute company-ghc prefix command at current point
     Then company-ghc prefix is "func"
+
+    Given the buffer is empty
+    When I insert:
+    """
+    main = do
+        x <- foo <$
+    """
+    And I execute company-ghc prefix command at current point
+    Then company-ghc prefix is "<$"
 
   Scenario: Stopping prefix
     Given the buffer is empty
