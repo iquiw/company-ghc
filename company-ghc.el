@@ -139,9 +139,9 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
                (not (looking-at-p "^import\\>")))
              (setq match (company-ghc--grab-qualified))))
       (cons (cdr match) t))
-     ((looking-back "[[:word:].]*" nil t)
+     ((looking-back "[[:word:].]+" nil t)
       (match-string-no-properties 0))
-     (t (company-grab-symbol)))))
+     (t (company-ghc--grab-name)))))
 
 (defun company-ghc-candidates (prefix)
   "Provide completion candidates for the given PREFIX."
@@ -380,6 +380,18 @@ If the line is less offset than OFFSET, it finishes the search."
            0 1 (append (list :kind knd) props) (list candidate))
     candidate))
 
+(defun company-ghc--grab-name ()
+  "Grap identifier or operator name backward from the current point."
+  (save-excursion
+   (buffer-substring-no-properties
+    (point)
+    (progn
+      (let* ((c (char-before))
+             (syn (and c (char-syntax c))))
+        (when (member syn '(?w ?.))
+          (skip-syntax-backward (string syn)))
+        (point))))))
+
 (defun company-ghc--grab-qualified ()
   "Grab cons of qualified specifier and keyword backward from the current point.
 Return nil if none found."
@@ -482,7 +494,7 @@ When called interactively, MOD is specified in minibuffer."
   (company-begin-backend
    (lambda (command &optional arg &rest ignored)
      (cl-case command
-       (prefix (company-grab-symbol))
+       (prefix (company-ghc--grab-name))
        (candidates (company-ghc--gather-candidates arg (list mod)))
        (meta (company-ghc-meta arg))
        (doc-buffer (company-ghc-doc-buffer arg))
@@ -499,7 +511,7 @@ When called interactively, QUERY is specified in minibuffer."
   (company-begin-backend
    (lambda (command &optional arg &rest ignored)
      (cl-case command
-       (prefix (company-grab-symbol))
+       (prefix (company-ghc--grab-name))
        (candidates (company-ghc--hoogle-candidates query))
        (meta (company-ghc--pget arg :type))
        (doc-buffer (company-ghc-doc-buffer arg))
