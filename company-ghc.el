@@ -71,6 +71,11 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
   "Specify limit of hoogle search results."
   :type 'number)
 
+(defcustom company-ghc-component-prefix-match nil
+  "Non-nil to enable module component prefix match.
+e.g. \"C.M\" to match with \"Control.Monad\", etc."
+  :type 'boolean)
+
 (defconst company-ghc-pragma-regexp "{-#[[:space:]]*\\([[:upper:]]+\\>\\|\\)")
 
 (defconst company-ghc-langopt-regexp
@@ -153,7 +158,14 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
        (all-completions prefix (company-ghc--source-options)))
       (`(impspec . ,mod)
        (all-completions prefix (company-ghc--source-keywords mod)))
-      (`(module) (all-completions prefix (company-ghc--source-modules)))
+      (`(module)
+       (if company-ghc-component-prefix-match
+           (all-completions
+            "" (company-ghc--source-modules)
+            (lambda (mod)
+              (company-ghc--component-prefix-match-p
+               (split-string prefix "\\.") mod)))
+         (all-completions prefix (company-ghc--source-modules))))
       (`(qualified . ,alias)
        (let ((mods (company-ghc--list-modules-by-alias alias)))
          (company-ghc--gather-candidates prefix mods)))
@@ -372,6 +384,18 @@ Return nil if none found."
         (cons
          (buffer-substring-no-properties (point) end)
          prefix)))))
+
+(defun company-ghc--component-prefix-match-p (pcomps module)
+  "Return non-nil if each component of PCOMPS is prefix of each component of
+MODULE split by '.'."
+  (let ((mcomps (split-string module "\\.")))
+    (catch 'result
+      (dolist (p pcomps)
+        (when (or (null mcomps)
+                  (not (string-prefix-p p (car mcomps))))
+          (throw 'result nil))
+        (setq mcomps (cdr mcomps)))
+      (throw 'result t))))
 
 ;;
 ;; ghc-mod completion sources

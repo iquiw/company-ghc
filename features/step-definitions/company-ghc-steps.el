@@ -49,6 +49,7 @@
 
 (Given "^these GHC modules\\(?: \"\\(.+\\)\"\\|:\\)$"
        (lambda (words)
+         (setq company-ghc--source-modules nil)
          (setq ghc-module-names (split-string words "[[:space:]\n]+"))))
 ;;
 ;; Given these module keywords:

@@ -172,6 +172,41 @@ Feature: company-ghc candidates
     )
     """
 
+  Scenario: Import module candidates with component prefix match
+    Given the buffer is empty
+    Given these GHC modules:
+    """
+    Control.Applicative
+    Control.Monad
+    Control.Monad.Trans
+    Data.ByteString
+    Data.ByteString.Lazy
+    """
+
+    When I set company-ghc-component-prefix-match to nil
+    When I insert "import C.M"
+    And I execute company-ghc candidates command at current point
+    Then company-ghc candidates are "()"
+
+    When I set company-ghc-component-prefix-match to t
+    And I execute company-ghc candidates command at current point
+    Then company-ghc candidates are:
+    """
+    (
+    "Control.Monad"
+    "Control.Monad.Trans"
+    )
+    """
+
+    When I insert "."
+    And I execute company-ghc candidates command at current point
+    Then company-ghc candidates are:
+    """
+    (
+    "Control.Monad.Trans"
+    )
+    """
+
   Scenario: Imported module keyword candidates
     Given the buffer is empty
     Given these module keywords:
