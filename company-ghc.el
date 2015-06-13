@@ -4,7 +4,7 @@
 
 ;; Author:    Iku Iwasa <iku.iwasa@gmail.com>
 ;; URL:       https://github.com/iquiw/company-ghc
-;; Version:   0.2.1
+;; Version:   0.2.2
 ;; Package-Requires: ((cl-lib "0.5") (company "0.8.0") (ghc "4.1.1") (emacs "24"))
 ;; Keywords:  haskell, completion
 ;; Stability: experimental
@@ -271,7 +271,7 @@ continues or not."
   "Search start of import decl and return the point after import and offset."
   (catch 'result
     (while (re-search-forward "^\\([[:space:]]*\\)import\\>" nil t)
-      (unless (company-ghc--in-comment-p)
+      (unless (save-match-data (company-ghc--in-comment-p))
         (throw 'result
                (cons (match-end 0)
                      (string-width (match-string-no-properties 1))))))))
@@ -287,9 +287,9 @@ If the line is less offset than OFFSET, it finishes the search."
          ((company-ghc--in-comment-p) nil)
          ((looking-at "^[[:space:]]*$") nil)
          ((looking-at "^#") nil)
-         ((not (and (looking-at "^\\([[:space:]]*\\)\\([^[:space:]\n]*\\)")
-                    (< offset (string-width (match-string-no-properties 1)))))
-          (throw 'result (cons p (match-string-no-properties 2)))))
+         ((looking-at "^\\([[:space:]]*\\)\\([^[:space:]\n]*\\)")
+          (unless (< offset (string-width (match-string-no-properties 1)))
+            (throw 'result (cons p (match-string-no-properties 2))))))
         (forward-line)
         (setq p (point)))
       (throw 'result (cons p nil)))))
