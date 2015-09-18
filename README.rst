@@ -99,9 +99,15 @@ The following completions are available.
 
 Show type info in minibuffer
 ----------------------------
-* If ``company-ghc-show-info`` is ``t``, ``oneline`` or ``nomodule``,
-  then type info of completion candidate is displayed in minibuffer
-  by ``ghc-mod info``.
+* Type info of completion candidate is displayed in minibuffer,
+  given by ``ghc-modi browse -d``.
+
+  Only when ``ghc-modi browse -d`` does not provide type info,
+  ``company-ghc-show-info`` (``t``, ``oneline`` or ``nomodule``) is used to
+  determine how type info given by ``ghc-modi info`` is displayed.
+
+  Default value of ``company-ghc-show-info`` is nil since when ``ghc-modi info`` is called,
+  ghc-mod pops up error if the current buffer contains error.
 
   .. image:: images/showinfo.png
      :alt: Show info in minibuffer (``nomodule``)
