@@ -34,18 +34,22 @@
 
 (Given "^these GHC pragmas\\(?: \"\\(.+\\)\"\\|:\\)$"
        (lambda (words)
+         (setq company-ghc--source-pragmas nil) ; clear cache
          (setq ghc-pragma-names (split-string words "[[:space:]\n]+"))))
 
 (Given "^these GHC language extensions\\(?: \"\\(.+\\)\"\\|:\\)$"
        (lambda (words)
+         (setq company-ghc--source-languages nil) ; clear cache
          (setq ghc-language-extensions (split-string words "[[:space:]\n]+"))))
 
 (Given "^these GHC option flags\\(?: \"\\(.+\\)\"\\|:\\)$"
        (lambda (words)
+         (setq company-ghc--source-options nil) ; clear cache
          (setq ghc-option-flags (split-string words "[[:space:]\n]+"))))
 
 (Given "^these GHC modules\\(?: \"\\(.+\\)\"\\|:\\)$"
        (lambda (words)
+         (setq company-ghc--source-modules nil)
          (setq ghc-module-names (split-string words "[[:space:]\n]+"))))
 ;;
 ;; Given these module keywords:

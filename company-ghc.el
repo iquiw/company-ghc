@@ -4,7 +4,7 @@
 
 ;; Author:    Iku Iwasa <iku.iwasa@gmail.com>
 ;; URL:       https://github.com/iquiw/company-ghc
-;; Version:   0.2.0
+;; Version:   0.2.2
 ;; Package-Requires: ((cl-lib "0.5") (company "0.8.0") (ghc "5.1.0") (emacs "24"))
 ;; Keywords:  haskell, completion
 ;; Stability: experimental
@@ -70,6 +70,11 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
 (defcustom company-ghc-hoogle-search-limit 20
   "Specify limit of hoogle search results."
   :type 'number)
+
+(defcustom company-ghc-component-prefix-match nil
+  "Non-nil to enable module component prefix match.
+e.g. \"C.M\" to match with \"Control.Monad\", etc."
+  :type 'boolean)
 
 (defconst company-ghc-pragma-regexp "{-#[[:space:]]*\\([[:upper:]]+\\>\\|\\)")
 
@@ -147,12 +152,21 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
   "Provide completion candidates for the given PREFIX."
   (let ((ctx (company-ghc--find-context)))
     (pcase ctx
-      (`(pragma) (all-completions prefix ghc-pragma-names))
-      (`(langopt . "LANGUAGE") (all-completions prefix ghc-language-extensions))
-      (`(langopt . "OPTIONS_GHC") (all-completions prefix ghc-option-flags))
+      (`(pragma) (all-completions prefix (company-ghc--source-pragmas)))
+      (`(langopt . "LANGUAGE")
+       (all-completions prefix (company-ghc--source-languages)))
+      (`(langopt . "OPTIONS_GHC")
+       (all-completions prefix (company-ghc--source-options)))
       (`(impspec . ,mod)
-       (all-completions prefix (company-ghc--get-module-keywords mod)))
-      (`(module) (all-completions prefix ghc-module-names))
+       (all-completions prefix (company-ghc--source-keywords mod)))
+      (`(module)
+       (if company-ghc-component-prefix-match
+           (all-completions
+            "" (company-ghc--source-modules)
+            (lambda (mod)
+              (company-ghc--component-prefix-match-p
+               (split-string prefix "\\.") mod)))
+         (all-completions prefix (company-ghc--source-modules))))
       (`(qualified . ,alias)
        (let ((mods (company-ghc--list-modules-by-alias alias)))
          (company-ghc--gather-candidates prefix mods)))
@@ -164,33 +178,10 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
   "Show type info for the given CANDIDATE. Use cached info if any."
   (or (company-ghc--pget candidate :type)
       (when company-ghc-show-info
-        (let ((typ (company-ghc--info candidate)))
+        (let ((typ (company-ghc--source-info candidate)))
           (when typ
             (company-ghc--pset candidate :type typ))
           typ))))
-
-(defun company-ghc--info (candidate)
-  "Show type info for the given CANDIDATE by `ghc-show-info'."
-  (let* ((mod (company-ghc--pget candidate :module))
-         (pair (and mod (assoc-string mod company-ghc--imported-modules)))
-         (qualifier (or (cdr pair) mod)))
-    (when qualifier
-      (let ((info (ghc-get-info (concat qualifier "." candidate))))
-        (when (stringp info)
-          (when (string-match
-                 "-- Defined at \\(.*\\):\\([[:digit:]]+\\):[[:digit:]]+$"
-                 info)
-            (company-ghc--pset candidate :location
-                               (cons (match-string-no-properties 1 info)
-                                     (string-to-number
-                                      (match-string-no-properties 2 info)))))
-          (pcase company-ghc-show-info
-            (`t info)
-            (`oneline (replace-regexp-in-string "\n" "" info))
-            (`nomodule
-             (when (string-match "\\(?:[^[:space:]]+\\.\\)?\\([^\t]+\\)\t" info)
-               (replace-regexp-in-string
-                "\n" "" (match-string-no-properties 1 info))))))))))
 
 (defun company-ghc-location (candidate)
   "Return cons of file path and line number of CANDIDATE."
@@ -216,26 +207,9 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
     (sort (cl-mapcan
            (lambda (mod)
              (all-completions
-              prefix (company-ghc--get-module-keywords mod)))
+              prefix (company-ghc--source-keywords mod)))
            mods)
           'string<)))
-
-(defun company-ghc--get-module-keywords (mod)
-  "Get names defined in the specified module MOD.
-Return cached data if any."
-  (let ((funs (gethash mod company-ghc--module-cache)))
-    (unless funs
-      (setq funs (mapcar
-                  (lambda (s)
-                    (if (string-match "\\(.*?\\) ::" s)
-                        (company-ghc--propertize-candidate
-                         (match-string 1 s) :module mod :type s)
-                      (company-ghc--propertize-candidate s :module mod)))
-                  (ghc-sync-process (concat "browse -d " mod "\n"))))
-      (if (listp funs)
-          (puthash mod funs company-ghc--module-cache)
-        (setq funs nil)))
-    funs))
 
 ;;
 ;; import module parsing
@@ -298,7 +272,7 @@ continues or not."
   "Search start of import decl and return the point after import and offset."
   (catch 'result
     (while (re-search-forward "^\\([[:space:]]*\\)import\\>" nil t)
-      (unless (company-ghc--in-comment-p)
+      (unless (save-match-data (company-ghc--in-comment-p))
         (throw 'result
                (cons (match-end 0)
                      (string-width (match-string-no-properties 1))))))))
@@ -314,9 +288,9 @@ If the line is less offset than OFFSET, it finishes the search."
          ((company-ghc--in-comment-p) nil)
          ((looking-at "^[[:space:]]*$") nil)
          ((looking-at "^#") nil)
-         ((not (and (looking-at "^\\([[:space:]]*\\)\\([^[:space:]\n]*\\)")
-                    (< offset (string-width (match-string-no-properties 1)))))
-          (throw 'result (cons p (match-string-no-properties 2)))))
+         ((looking-at "^\\([[:space:]]*\\)\\([^[:space:]\n]*\\)")
+          (unless (< offset (string-width (match-string-no-properties 1)))
+            (throw 'result (cons p (match-string-no-properties 2))))))
         (forward-line)
         (setq p (point)))
       (throw 'result (cons p nil)))))
@@ -340,7 +314,7 @@ If the line is less offset than OFFSET, it finishes the search."
        (t (throw 'result nil))))))
 
 ;;
-;; Unitilities
+;; Utilities
 ;;
 (defun company-ghc--pget (s prop)
   "Get property value of PROP from the keyword S."
@@ -411,6 +385,89 @@ Return nil if none found."
         (cons
          (buffer-substring-no-properties (point) end)
          prefix)))))
+
+(defun company-ghc--component-prefix-match-p (pcomps module)
+  "Return non-nil if each component of PCOMPS is prefix of each component of
+MODULE split by '.'."
+  (let ((mcomps (split-string module "\\.")))
+    (catch 'result
+      (dolist (p pcomps)
+        (when (or (null mcomps)
+                  (not (string-prefix-p p (car mcomps))))
+          (throw 'result nil))
+        (setq mcomps (cdr mcomps)))
+      (throw 'result t))))
+
+;;
+;; ghc-mod completion sources
+;;
+(defvar company-ghc--source-modules nil)
+(defun company-ghc--source-modules ()
+  "Return sorted module names, cached one if any."
+  (or company-ghc--source-modules
+      (setq company-ghc--source-modules
+            (sort (cl-copy-list ghc-module-names) 'string<))))
+
+(defvar company-ghc--source-pragmas nil)
+(defun company-ghc--source-pragmas ()
+  "Return sorted pragma names, cached one if any."
+  (or company-ghc--source-pragmas
+      (setq company-ghc--source-pragmas
+            (sort (cl-copy-list ghc-pragma-names) 'string<))))
+
+(defvar company-ghc--source-languages nil)
+(defun company-ghc--source-languages ()
+  "Return sorted language extensions, cached one if any."
+  (or company-ghc--source-languages
+      (setq company-ghc--source-languages
+            (sort (cl-copy-list ghc-language-extensions) 'string<))))
+
+(defvar company-ghc--source-options nil)
+(defun company-ghc--source-options ()
+  "Return sorted option flags, cached one if any."
+  (or company-ghc--source-options
+      (setq company-ghc--source-options
+            (sort (cl-copy-list ghc-option-flags) 'string<))))
+
+(defun company-ghc--source-keywords (mod)
+  "Get names defined in the specified module MOD.
+Return cached data if any."
+  (let ((funs (gethash mod company-ghc--module-cache)))
+    (unless funs
+      (setq funs (mapcar
+                  (lambda (s)
+                    (if (string-match "\\(.*?\\) ::" s)
+                        (company-ghc--propertize-candidate
+                         (match-string 1 s) :module mod :type s)
+                      (company-ghc--propertize-candidate s :module mod)))
+                  (ghc-sync-process (concat "browse -d " mod "\n"))))
+      (if (listp funs)
+          (puthash mod funs company-ghc--module-cache)
+        (setq funs nil)))
+    funs))
+
+(defun company-ghc--source-info (candidate)
+  "Show type info for the given CANDIDATE by `ghc-show-info'."
+  (let* ((mod (company-ghc--pget candidate :module))
+         (pair (and mod (assoc-string mod company-ghc--imported-modules)))
+         (qualifier (or (cdr pair) mod)))
+    (when qualifier
+      (let ((info (ghc-get-info (concat qualifier "." candidate))))
+        (when (stringp info)
+          (when (string-match
+                 "-- Defined at \\(.*\\):\\([[:digit:]]+\\):[[:digit:]]+$"
+                 info)
+            (company-ghc--pset candidate :location
+                               (cons (match-string-no-properties 1 info)
+                                     (string-to-number
+                                      (match-string-no-properties 2 info)))))
+          (pcase company-ghc-show-info
+            (`t info)
+            (`oneline (replace-regexp-in-string "\n" "" info))
+            (`nomodule
+             (when (string-match "\\(?:[^[:space:]]+\\.\\)?\\([^\t]+\\)\t" info)
+               (replace-regexp-in-string
+                "\n" "" (match-string-no-properties 1 info))))))))))
 
 ;;;###autoload
 (defun company-ghc (command &optional arg &rest ignored)

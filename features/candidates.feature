@@ -37,21 +37,21 @@ Feature: company-ghc candidates
     Then company-ghc candidates are:
     """
     (
-    "Haskell98"
-    "Haskell2010"
-    "Unsafe"
-    "Trustworthy"
-    "Safe"
     "CPP"
+    "Haskell2010"
+    "Haskell98"
     "NoCPP"
-    "PostfixOperators"
     "NoPostfixOperators"
+    "PostfixOperators"
+    "Safe"
+    "Trustworthy"
+    "Unsafe"
     )
     """
 
     When I insert "Haskell"
     And I execute company-ghc candidates command at current point
-    Then company-ghc candidates are "("Haskell98" "Haskell2010")"
+    Then company-ghc candidates are "("Haskell2010" "Haskell98")"
 
     When I insert:
     """
@@ -92,12 +92,12 @@ Feature: company-ghc candidates
     (
     "-ferror-spans"
     "-fno-error-spans"
-    "-fprint-explicit-foralls"
     "-fno-print-explicit-foralls"
-    "-fprint-explicit-kinds"
     "-fno-print-explicit-kinds"
-    "-fstrictness"
     "-fno-strictness"
+    "-fprint-explicit-foralls"
+    "-fprint-explicit-kinds"
+    "-fstrictness"
     )
     """
 
@@ -139,10 +139,10 @@ Feature: company-ghc candidates
     Then company-ghc candidates are:
     """
     (
-    "Data.Text"
-    "Data.Text.Lazy"
     "Data.ByteString"
     "Data.ByteString.Lazy"
+    "Data.Text"
+    "Data.Text.Lazy"
     "Prelude"
     "System.Environment"
     "System.IO"
@@ -154,10 +154,10 @@ Feature: company-ghc candidates
     Then company-ghc candidates are:
     """
     (
-    "Data.Text"
-    "Data.Text.Lazy"
     "Data.ByteString"
     "Data.ByteString.Lazy"
+    "Data.Text"
+    "Data.Text.Lazy"
     )
     """
 
@@ -169,6 +169,41 @@ Feature: company-ghc candidates
     (
     "System.Environment"
     "System.IO"
+    )
+    """
+
+  Scenario: Import module candidates with component prefix match
+    Given the buffer is empty
+    Given these GHC modules:
+    """
+    Control.Applicative
+    Control.Monad
+    Control.Monad.Trans
+    Data.ByteString
+    Data.ByteString.Lazy
+    """
+
+    When I set company-ghc-component-prefix-match to nil
+    When I insert "import C.M"
+    And I execute company-ghc candidates command at current point
+    Then company-ghc candidates are "()"
+
+    When I set company-ghc-component-prefix-match to t
+    And I execute company-ghc candidates command at current point
+    Then company-ghc candidates are:
+    """
+    (
+    "Control.Monad"
+    "Control.Monad.Trans"
+    )
+    """
+
+    When I insert "."
+    And I execute company-ghc candidates command at current point
+    Then company-ghc candidates are:
+    """
+    (
+    "Control.Monad.Trans"
     )
     """
 
