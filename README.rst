@@ -217,7 +217,7 @@ Licensed under the GPL 3+ license.
 .. _ghc-mod manual: http://www.mew.org/~kazu/proj/ghc-mod/en/preparation.html
 .. _haskell-docs: https://github.com/chrisdone/haskell-docs
 .. _hoogle: https://hackage.haskell.org/package/hoogle
-.. _MELPA: http://melpa.milkbox.net/
+.. _MELPA: http://melpa.org/
 .. |travis| image:: https://api.travis-ci.org/iquiw/company-ghc.svg?branch=master
             :target: https://travis-ci.org/iquiw/company-ghc
 .. |melpa| image:: http://melpa.org/packages/company-ghc-badge.svg
