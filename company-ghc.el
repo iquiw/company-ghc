@@ -5,7 +5,7 @@
 ;; Author:    Iku Iwasa <iku.iwasa@gmail.com>
 ;; URL:       https://github.com/iquiw/company-ghc
 ;; Version:   0.2.2
-;; Package-Requires: ((cl-lib "0.5") (company "0.8.0") (ghc "4.1.1") (emacs "24"))
+;; Package-Requires: ((cl-lib "0.5") (company "0.8.0") (ghc "5.1.0") (emacs "24"))
 ;; Keywords:  haskell, completion
 ;; Stability: experimental
 
@@ -45,7 +45,7 @@
   "company-mode back-end for haskell-mode."
   :group 'company)
 
-(defcustom company-ghc-show-info 'nomodule
+(defcustom company-ghc-show-info nil
   "Specify how to show type info in minibuffer."
   :type '(choice (const :tag "Off" nil)
                  (const :tag "Show raw output" t)
@@ -103,6 +103,7 @@ e.g. \"C.M\" to match with \"Control.Monad\", etc."
 (defvar company-ghc--propertized-modules '())
 (defvar company-ghc--imported-modules '())
 (make-variable-buffer-local 'company-ghc--imported-modules)
+(defvar company-ghc--module-cache (make-hash-table :test 'equal))
 
 (defun company-ghc--find-context ()
   "Find completion context at the current point."
@@ -429,18 +430,21 @@ MODULE split by '.'."
             (sort (cl-copy-list ghc-option-flags) 'string<))))
 
 (defun company-ghc--source-keywords (mod)
-  "Get defined keywords in the specified module MOD."
-  (let ((sym (ghc-module-symbol mod))
-        result)
-    (when (and (not (boundp sym))
-               (listp (setq result (ghc-load-module mod))))
-      (set sym result))
-    (when (boundp sym)
-      (if (member mod company-ghc--propertized-modules)
-          (ghc-module-keyword mod)
-        (push mod company-ghc--propertized-modules)
-        (mapcar (lambda (k) (company-ghc--pset k :module mod))
-                (ghc-module-keyword mod))))))
+  "Get names defined in the specified module MOD.
+Return cached data if any."
+  (let ((funs (gethash mod company-ghc--module-cache)))
+    (unless funs
+      (setq funs (mapcar
+                  (lambda (s)
+                    (if (string-match "\\(.*?\\) ::" s)
+                        (company-ghc--propertize-candidate
+                         (match-string 1 s) :module mod :type s)
+                      (company-ghc--propertize-candidate s :module mod)))
+                  (ghc-sync-process (concat "browse -d " mod "\n"))))
+      (if (listp funs)
+          (puthash mod funs company-ghc--module-cache)
+        (setq funs nil)))
+    funs))
 
 (defun company-ghc--source-info (candidate)
   "Show type info for the given CANDIDATE by `ghc-show-info'."
@@ -523,9 +527,8 @@ Provide completion info according to COMMAND and ARG.  IGNORED, not used."
       (cl-dolist (pair mods)
         (let* ((mod (car pair))
                (alias (cdr pair))
-               (sym (ghc-module-symbol mod))
-               (len (or (and (boundp sym)
-                             (length (ghc-module-keyword mod)))
+               (funs (gethash mod company-ghc--module-cache))
+               (len (or (and funs (length funs))
                         nil)))
           (insert mod)
           (move-to-column 40 t)
