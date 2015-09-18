@@ -45,7 +45,7 @@
   "company-mode back-end for haskell-mode."
   :group 'company)
 
-(defcustom company-ghc-show-info 'nomodule
+(defcustom company-ghc-show-info nil
   "Specify how to show type info in minibuffer."
   :type '(choice (const :tag "Off" nil)
                  (const :tag "Show raw output" t)
