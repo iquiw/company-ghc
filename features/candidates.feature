@@ -212,6 +212,7 @@ Feature: company-ghc candidates
     Given these module keywords:
       | module          | keywords                               |
       | Predule         | head readFile splitAt tail writeFile   |
+      | Control.Monad   | >> >>= =<< return fail                 |
       | Data.Text       | Text singleton splitOn strip           |
       | Data.Text.IO    | readFile writeFile                     |
       | Data.ByteString | ByteString singleton splitAt           |
@@ -270,6 +271,21 @@ Feature: company-ghc candidates
     """
     And I execute company-ghc candidates command at current point
     Then company-ghc candidates are "("readFile")"
+
+    When I insert:
+    """
+    )
+    import Control.Monad hiding ((
+    """
+    And I execute company-ghc candidates command at current point
+    Then company-ghc candidates are "(">>" ">>=" "=<<")"
+
+    When I insert:
+    """
+    >>), return, (>
+    """
+    And I execute company-ghc candidates command at current point
+    Then company-ghc candidates are "(">>" ">>=")"
 
   Scenario: Loaded modules keyword candidates
     Given the buffer is empty

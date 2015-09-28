@@ -149,10 +149,18 @@ Feature: company-ghc prefix
     When I insert:
     """
     import safe qualified "package" Some.Module ( SomeVar
-                                                  , AnotherVar
+                                                , AnotherVar
     """
     And I execute company-ghc prefix command at current point
     Then company-ghc prefix is "AnotherVar"
+
+    Given the buffer is empty
+    When I insert:
+    """
+    import Some.Module (SomeVar, (=$
+    """
+    And I execute company-ghc prefix command at current point
+    Then company-ghc prefix is "=$"
 
   Scenario: Keyword prefix
     Given the buffer is empty
