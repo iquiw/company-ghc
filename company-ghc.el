@@ -76,29 +76,36 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
 e.g. \"C.M\" to match with \"Control.Monad\", etc."
   :type 'boolean)
 
-(defconst company-ghc-pragma-regexp "{-#[[:space:]]*\\([[:upper:]]+\\>\\|\\)")
+(let ((s* "[[:space:]\n]*")
+      (s+ "[[:space:]\n]+"))
+  (defconst company-ghc-pragma-regexp
+    (concat "{-#" s* "\\([[:upper:]]+\\>\\|\\)"))
 
-(defconst company-ghc-langopt-regexp
-  (concat "{-#[[:space:]\n]*\\(LANGUAGE\\|OPTIONS_GHC\\)[[:space:]\n]+"
-          "\\(?:[^[:space:]]+,[[:space:]\n]*\\)*"
-          "\\([^[:space:]]+\\|\\)"))
+  (defconst company-ghc-langopt-regexp
+    (concat "{-#" s*
+            "\\(LANGUAGE\\|OPTIONS_GHC\\)" s+
+            "\\(?:[^[:space:]]+," s*
+            "\\)*"
+            "\\([^[:space:]]+\\|\\)"))
 
-(defconst company-ghc-import-regexp
-  (concat "import[[:space:]\n]+"
-          "\\(?:safe[[:space:]\n]+\\)?"
-          "\\(?:qualified[[:space:]\n]+\\)?"
-          "\\(?:\"[^\"]+\"[[:space:]\n]+\\)?"
-          "\\([[:word:].]+\\|\\)"))
+  (defconst company-ghc-import-regexp
+    (concat "import" s+
+            "\\(?:safe" s+ "\\)?"
+            "\\(?:qualified" s+ "\\)?"
+            "\\(?:\"[^\"]+\"" s+ "\\)?"
+            "\\([[:word:].]+\\|\\)"))
 
-(defconst company-ghc-impdecl-regexp
-  (concat company-ghc-import-regexp
-          "\\(?:[[:space:]\n]+as[[:space:]\n]+\\w+\\)?"
-          "[[:space:]\n]*\\(?:hiding[[:space:]\n]\\)*("
-          "\\(?:[[:space:]\n]*[[:word:]]+[[:space:]\n]*,\\)*"
-          "[[:space:]\n]*\\([[:word:]]+\\_>\\|\\)"))
+  (defconst company-ghc-impdecl-regexp
+    (concat company-ghc-import-regexp
+            "\\(?:" s+ "as" s+ "\\w+\\)?" s*
+            "\\(?:hiding" s* "\\)?("
+            "\\(?:" s*
+            "[^[:space:]]+" s*
+            ",\\)*" s*
+            "\\([[:word:]]+\\|([[:punct:]]+\\|(?\\)"))
 
-(defconst company-ghc-module-regexp
-  "module[[:space:]]*\\([[:word:].]+\\_>\\|\\)")
+  (defconst company-ghc-module-regexp
+    "module[[:space:]]*\\([[:word:].]+\\_>\\|\\)"))
 
 (defvar company-ghc--propertized-modules '())
 (defvar company-ghc--imported-modules '())
@@ -117,7 +124,10 @@ e.g. \"C.M\" to match with \"Control.Monad\", etc."
            (cons 'langopt (match-string-no-properties 1))))))
 
    ((company-grab company-ghc-impdecl-regexp)
-    (cons 'impspec (match-string-no-properties 1)))
+    (cons (if (string-match-p "^(" (match-string-no-properties 2))
+              'impspec-op
+            'impspec)
+          (match-string-no-properties 1)))
 
    ((company-grab company-ghc-import-regexp) '(module))
 
@@ -158,7 +168,11 @@ e.g. \"C.M\" to match with \"Control.Monad\", etc."
       (`(langopt . "OPTIONS_GHC")
        (all-completions prefix (company-ghc--source-options)))
       (`(impspec . ,mod)
-       (all-completions prefix (company-ghc--source-keywords mod)))
+       (all-completions prefix (company-ghc--source-keywords mod)
+                        (lambda (x) (string-match-p "^[[:word:]]" x))))
+      (`(impspec-op . ,mod)
+       (all-completions prefix (company-ghc--source-keywords mod)
+                        (lambda (x) (string-match-p "^[[:punct:]]" x))))
       (`(module)
        (if company-ghc-component-prefix-match
            (all-completions
@@ -440,7 +454,7 @@ Return cached data if any."
                         (company-ghc--propertize-candidate
                          (match-string 1 s) :module mod :type s)
                       (company-ghc--propertize-candidate s :module mod)))
-                  (ghc-sync-process (concat "browse -d " mod "\n"))))
+                  (ghc-sync-process (concat "browse -d -o " mod "\n"))))
       (if (listp funs)
           (puthash mod funs company-ghc--module-cache)
         (setq funs nil)))
