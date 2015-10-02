@@ -189,7 +189,7 @@ e.g. \"C.M\" to match with \"Control.Monad\", etc."
           (mapcar 'car company-ghc--imported-modules))))))
 
 (defun company-ghc-meta (candidate)
-  "Show type info for the given CANDIDATE. Use cached info if any."
+  "Show type info for the given CANDIDATE.  Use cached info if any."
   (or (company-ghc--pget candidate :type)
       (when company-ghc-show-info
         (let ((typ (company-ghc--source-info candidate)))
@@ -331,11 +331,11 @@ If the line is less offset than OFFSET, it finishes the search."
 ;; Utilities
 ;;
 (defun company-ghc--pget (s prop)
-  "Get property value of PROP from the keyword S."
+  "Get value of text S's property PROP."
   (get-text-property 0 prop s))
 
 (defun company-ghc--pset (s prop val)
-  "Set property PROP of the keywork S to VAL."
+  "Set value of text S's property PROP to VAL."
   (put-text-property 0 1 prop val s)
   s)
 
@@ -401,8 +401,9 @@ Return nil if none found."
          prefix)))))
 
 (defun company-ghc--component-prefix-match-p (pcomps module)
-  "Return non-nil if each component of PCOMPS is prefix of each component of
-MODULE split by '.'."
+  "Return non-nil if PCOMPS is component-wise prefix of MODULE.
+That is each component of PCOMPS is prefix of each component of MODULE
+split by '.'."
   (let ((mcomps (split-string module "\\.")))
     (catch 'result
       (dolist (p pcomps)
