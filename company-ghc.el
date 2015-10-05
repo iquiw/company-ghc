@@ -120,8 +120,7 @@ e.g. \"C.M\" to match with \"Control.Monad\", etc."
      ((company-grab company-ghc-pragma-regexp)
       '(pragma))
      ((company-grab company-ghc-langopt-regexp)
-      (and (looking-at-p "\\([#, [:space:]]\\|$\\)")
-           (cons 'langopt (match-string-no-properties 1))))))
+      (cons 'langopt (match-string-no-properties 1)))))
 
    ((company-grab company-ghc-impdecl-regexp)
     (cons (if (string-match-p "^(" (match-string-no-properties 2))

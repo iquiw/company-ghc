@@ -63,6 +63,15 @@ Feature: company-ghc prefix
     Given the buffer is empty
     When I insert:
     """
+    {-#LANGUAGE SomeFeature}
+    """
+    And I place the cursor before "}"
+    And I execute company-ghc prefix command at current point
+    Then company-ghc prefix is "SomeFeature"
+
+    Given the buffer is empty
+    When I insert:
+    """
     {-#LANGUAGE SomeFeature#-}
     """
     And I place the cursor before "#-}"

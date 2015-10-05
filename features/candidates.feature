@@ -67,6 +67,12 @@ Feature: company-ghc candidates
     Then company-ghc candidates are "("CPP")"
 
     Given the buffer is empty
+    When I insert "{-#LANGUAGE S}"
+    And I place the cursor after "S"
+    And I execute company-ghc candidates command at current point
+    Then company-ghc candidates are "("Safe")"
+
+    Given the buffer is empty
     When I insert "{-#LANGUAGE C#-}"
     And I place the cursor after "C"
     And I execute company-ghc candidates command at current point
