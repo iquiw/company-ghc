@@ -199,6 +199,22 @@ Feature: company-ghc prefix
     And I execute company-ghc prefix command at current point
     Then company-ghc prefix is "<$"
 
+    Given the buffer is empty
+    When I insert:
+    """
+    main = foo <$>bar
+    """
+    And I execute company-ghc prefix command at current point
+    Then company-ghc prefix is "bar"
+
+    Given the buffer is empty
+    When I insert:
+    """
+    main = foo=$
+    """
+    And I execute company-ghc prefix command at current point
+    Then company-ghc prefix is "=$"
+
   Scenario: Stopping prefix
     Given the buffer is empty
     When I insert:
@@ -216,6 +232,25 @@ Feature: company-ghc prefix
     """
     someLocalFunc
     """
+    And I execute company-ghc prefix command at current point
+    Then company-ghc prefix none
+
+    Given the buffer is empty
+    When I insert:
+    """
+    {-# LANGUAGE SomeFeature
+    """
+    And I place the cursor after "Some"
+    And I execute company-ghc prefix command at current point
+    Then company-ghc prefix none
+
+    Given the buffer is empty
+    When I insert:
+    """
+    main = do
+        someFunc
+    """
+    And I place the cursor after "some"
     And I execute company-ghc prefix command at current point
     Then company-ghc prefix none
 

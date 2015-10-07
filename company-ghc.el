@@ -86,7 +86,7 @@ e.g. \"C.M\" to match with \"Control.Monad\", etc."
             "\\(LANGUAGE\\|OPTIONS_GHC\\)" s+
             "\\(?:[^[:space:]]+," s*
             "\\)*"
-            "\\([^[:space:]]+\\|\\)"))
+            "\\([^[:space:]]+\\>\\|\\)"))
 
   (defconst company-ghc-import-regexp
     (concat "import" s+
@@ -145,7 +145,7 @@ e.g. \"C.M\" to match with \"Control.Monad\", etc."
      ((nth 4 ppss)
       (if (looking-back company-ghc-pragma-regexp)
           (match-string-no-properties 1)
-        (company-grab "[[:space:],]\\([^[:space:]]*\\)" 1)))
+        (company-grab "[[:space:],]\\([^[:space:]]*\\>\\|\\)" 1)))
      ((looking-back "^[^[:space:]]*") nil)
      ((let ((case-fold-search nil))
         (and (save-excursion
@@ -153,8 +153,6 @@ e.g. \"C.M\" to match with \"Control.Monad\", etc."
                (not (looking-at-p "^import\\>")))
              (setq match (company-ghc--grab-qualified))))
       (cons (cdr match) t))
-     ((looking-back "[[:word:].]+" nil t)
-      (match-string-no-properties 0))
      (t (company-ghc--grab-name)))))
 
 (defun company-ghc-candidates (prefix)
@@ -369,15 +367,27 @@ If the line is less offset than OFFSET, it finishes the search."
 
 (defun company-ghc--grab-name ()
   "Grap identifier or operator name backward from the current point."
-  (save-excursion
-   (buffer-substring-no-properties
-    (point)
-    (progn
-      (let* ((c (char-before))
-             (syn (and c (char-syntax c))))
-        (when (member syn '(?w ?.))
-          (skip-syntax-backward (string syn)))
-        (point))))))
+  (let* ((ca (char-after))
+         (cb (char-before))
+         (syna (and ca (char-syntax ca)))
+         (synb (and cb (char-syntax cb))))
+    (if (member synb '(?w ?.))
+        (when (or (null syna) (/= syna synb))
+          (buffer-substring-no-properties
+           (point)
+           (save-excursion
+             (cond
+              ((= cb ?.)
+               (let* ((cb2 (char-before (- (point) 1)))
+                      (synb2 (and cb2 (char-syntax cb2))))
+                 (cond
+                  ((equal synb2 ?w) (skip-chars-backward "[:word:]."))
+                  ((equal synb2 ?.) (skip-syntax-backward "."))
+                  (t "."))))
+              ((= synb ?w) (skip-chars-backward "[:word:]."))
+              (t (skip-syntax-backward ".")))
+             (point))))
+      "")))
 
 (defun company-ghc--grab-qualified ()
   "Grab cons of qualified specifier and keyword backward from the current point.
