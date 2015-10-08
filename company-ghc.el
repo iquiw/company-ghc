@@ -76,36 +76,40 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
 e.g. \"C.M\" to match with \"Control.Monad\", etc."
   :type 'boolean)
 
-(let ((s* "[[:space:]\n]*")
-      (s+ "[[:space:]\n]+"))
-  (defconst company-ghc-pragma-regexp
-    (concat "{-#" s* "\\([[:upper:]]+\\>\\|\\)"))
+(defconst company-ghc-pragma-regexp
+  (let ((s* "[[:space:]\n]*"))
+    (concat "{-#" s* "\\([[:upper:]]+\\>\\|\\)")))
 
-  (defconst company-ghc-langopt-regexp
+(defconst company-ghc-langopt-regexp
+  (let ((s* "[[:space:]\n]*")
+      (s+ "[[:space:]\n]+"))
     (concat "{-#" s*
             "\\(LANGUAGE\\|OPTIONS_GHC\\)" s+
             "\\(?:[^[:space:]]+," s*
             "\\)*"
-            "\\([^[:space:]]+\\>\\|\\)"))
+            "\\([^[:space:]]+\\>\\|\\)")))
 
-  (defconst company-ghc-import-regexp
+(defconst company-ghc-import-regexp
+  (let ((s+ "[[:space:]\n]+"))
     (concat "import" s+
             "\\(?:safe" s+ "\\)?"
             "\\(?:qualified" s+ "\\)?"
             "\\(?:\"[^\"]+\"" s+ "\\)?"
-            "\\([[:word:].]+\\|\\)"))
+            "\\([[:word:].]+\\|\\)")))
 
-  (defconst company-ghc-impdecl-regexp
+(defconst company-ghc-impdecl-regexp
+  (let ((s* "[[:space:]\n]*")
+        (s+ "[[:space:]\n]+"))
     (concat company-ghc-import-regexp
             "\\(?:" s+ "as" s+ "\\w+\\)?" s*
             "\\(?:hiding" s* "\\)?("
             "\\(?:" s*
             "[^[:space:]]+" s*
             ",\\)*" s*
-            "\\([[:word:]]+\\|([[:punct:]]+\\|(?\\)"))
+            "\\([[:word:]]+\\|([[:punct:]]+\\|(?\\)")))
 
-  (defconst company-ghc-module-regexp
-    "module[[:space:]]*\\([[:word:].]+\\_>\\|\\)"))
+(defconst company-ghc-module-regexp
+  "module[[:space:]]*\\([[:word:].]+\\_>\\|\\)")
 
 (defvar company-ghc--propertized-modules '())
 (defvar company-ghc--imported-modules '())
