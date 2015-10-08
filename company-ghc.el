@@ -56,6 +56,21 @@
   "Non-nil to show module name as annotation."
   :type 'boolean)
 
+(defcustom company-ghc-annotation-function #'company-ghc-annotation-default
+  "Function to generate annotation string from given module and type."
+  :type 'function)
+
+(defun company-ghc-annotation-default (candidate)
+  "Return annotation string of CANDIDATE.
+Append type and module if `company-ghc-show-module' is non-nil.
+Otherwise, type only."
+  (let* ((module (company-ghc--pget candidate :module))
+         (ftype (company-ghc--pget candidate :type))
+         (type (or (and ftype (replace-regexp-in-string ".*?::" "" ftype)) "")))
+    (if (and module company-ghc-show-module)
+        (format  "%s [%s]" type module)
+      (concat " " type))))
+
 (defcustom company-ghc-hoogle-command (or (and (boundp 'haskell-hoogle-command)
                                                haskell-hoogle-command)
                                           "hoogle")
@@ -213,8 +228,8 @@ e.g. \"C.M\" to match with \"Control.Monad\", etc."
 
 (defun company-ghc-annotation (candidate)
   "Show module name as annotation where the given CANDIDATE is defined."
-  (when company-ghc-show-module
-    (concat " " (company-ghc--pget candidate :module))))
+  (when company-ghc-annotation-function
+    (funcall company-ghc-annotation-function candidate)))
 
 (defun company-ghc--gather-candidates (prefix mods)
   "Gather candidates for PREFIX from keywords in MODS and return them sorted."
