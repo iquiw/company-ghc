@@ -172,6 +172,14 @@ Note
   If scan module is not performed in the buffer, completion by company-ghc does not work properly.
   scan module can be invoked by ``M-x company-ghc-scan-modules``.
 
+* company-ghc does not try to browse keywords in a module if the module failed
+  to be browsed once.
+
+  If you want company-ghc to browse failed modules again,
+  use ``M-x company-ghc-clear-failed-cache``.
+
+  To make all modules browsed again, use ``M-x company-ghc-clear-all-cache``.
+
 
 Diagnostic
 ==========

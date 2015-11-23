@@ -115,6 +115,7 @@ e.g. \"C.M\" to match with \"Control.Monad\", etc."
 (defvar company-ghc--imported-modules '())
 (make-variable-buffer-local 'company-ghc--imported-modules)
 (defvar company-ghc--module-cache (make-hash-table :test 'equal))
+(defvar company-ghc--module-status (make-hash-table :test 'equal))
 
 (defun company-ghc--find-context ()
   "Find completion context at the current point."
@@ -461,7 +462,8 @@ split by '.'."
   "Get names defined in the specified module MOD.
 Return cached data if any."
   (let ((funs (gethash mod company-ghc--module-cache)))
-    (unless funs
+    (when (and (null funs)
+               (not (company-ghc--failed-p mod)))
       (setq funs (mapcar
                   (lambda (s)
                     (if (string-match "\\(.*?\\) ::" s)
@@ -469,10 +471,36 @@ Return cached data if any."
                          (match-string 1 s) :module mod :type s)
                       (company-ghc--propertize-candidate s :module mod)))
                   (ghc-sync-process (concat "browse -d -o " mod "\n"))))
-      (if (listp funs)
-          (puthash mod funs company-ghc--module-cache)
-        (setq funs nil)))
+      (cond
+       ((null funs) (company-ghc--mark-failed mod))
+       ((listp funs) (puthash mod funs company-ghc--module-cache))
+       (t (setq funs nil))))
     funs))
+
+(defun company-ghc-clear-all-cache ()
+  "Clear all modules in cache.
+This makes all imported modules browsed at next completion."
+  (interactive)
+  (company-ghc-clear-failed-cache)
+  (clrhash company-ghc--module-cache))
+
+(defun company-ghc-clear-failed-cache ()
+  "Clear failed status modules in cache.
+All imported modules that failed to be browsed are browsed again
+at next completion."
+  (interactive)
+  (clrhash company-ghc--module-status))
+
+(defun company-ghc--mark-failed (mod)
+  "Mark module MOD failed to be browsed.
+MOD won't be browsed unless `company-ghc-clear-all-cache' or
+`company-ghc-clear-failed-cache' is called."
+  (puthash mod (cons 'failed (time-to-seconds (current-time)))
+           company-ghc--module-status))
+
+(defun company-ghc--failed-p (mod)
+  "Check module MOD was failed to be browsed or not."
+  (gethash mod company-ghc--module-status))
 
 (defun company-ghc--source-info (candidate)
   "Show type info for the given CANDIDATE by `ghc-show-info'."
