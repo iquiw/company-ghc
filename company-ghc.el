@@ -64,7 +64,9 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
   :type 'string)
 
 (defcustom company-ghc-autoscan t
-  "Non-nil to enable automatic scan module."
+  "Non-nil to enable automatic scan module.
+If enabled, imported modules are scanned after save.
+If new module is found, it will be browsed at next completion."
   :type 'boolean)
 
 (defcustom company-ghc-hoogle-search-limit 20
@@ -73,7 +75,7 @@ If `haskell-hoogle-command' is non-nil, the value is used as default."
 
 (defcustom company-ghc-component-prefix-match nil
   "Non-nil to enable module component prefix match.
-e.g. \"C.M\" to match with \"Control.Monad\", etc."
+If enabled, \"C.M\" to match with module \"Control.Monad\", etc."
   :type 'boolean)
 
 (defconst company-ghc-pragma-regexp
