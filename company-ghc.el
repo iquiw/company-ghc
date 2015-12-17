@@ -4,7 +4,7 @@
 
 ;; Author:    Iku Iwasa <iku.iwasa@gmail.com>
 ;; URL:       https://github.com/iquiw/company-ghc
-;; Version:   1.2.0
+;; Version:   1.2.1
 ;; Package-Requires: ((cl-lib "0.5") (company "0.8.0") (ghc "5.4.0.0") (emacs "24"))
 ;; Keywords:  haskell, completion
 ;; Stability: experimental
@@ -472,7 +472,8 @@ Return cached data if any."
                         (company-ghc--propertize-candidate
                          (match-string 1 s) :module mod :type s)
                       (company-ghc--propertize-candidate s :module mod)))
-                  (ghc-sync-process (concat "browse -d -o " mod "\n"))))
+                  (let ((ghc-report-errors nil))
+                    (ghc-sync-process (concat "browse -d -o " mod "\n")))))
       (cond
        ((null funs) (company-ghc--mark-failed mod))
        ((listp funs) (puthash mod funs company-ghc--module-cache))
