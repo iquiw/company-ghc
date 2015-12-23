@@ -224,14 +224,14 @@ License
 =======
 Licensed under the GPL 3+ license.
 
-.. _company-mode: http://company-mode.github.io/
+.. _company-mode: https://company-mode.github.io/
 .. _haskell-mode: https://github.com/haskell/haskell-mode
 .. _ghc-mod: http://www.mew.org/~kazu/proj/ghc-mod/en/
 .. _ghc-mod manual: http://www.mew.org/~kazu/proj/ghc-mod/en/preparation.html
 .. _haskell-docs: https://github.com/chrisdone/haskell-docs
 .. _hoogle: https://hackage.haskell.org/package/hoogle
-.. _MELPA: http://melpa.org/
+.. _MELPA: https://melpa.org/
 .. |travis| image:: https://api.travis-ci.org/iquiw/company-ghc.svg?branch=master
             :target: https://travis-ci.org/iquiw/company-ghc
-.. |melpa| image:: http://melpa.org/packages/company-ghc-badge.svg
-           :target: http://melpa.org/#/company-ghc
+.. |melpa| image:: https://melpa.org/packages/company-ghc-badge.svg
+           :target: https://melpa.org/#/company-ghc
