@@ -1,16 +1,17 @@
-language: emacs-lisp
+language: generic
+
+sudo: false
+
 env:
-  matrix:
-    - EMACS=emacs24
-    - EMACS=emacs-snapshot
+  - EVM_EMACS=emacs-24.3-travis
+  - EVM_EMACS=emacs-24.5-travis
+  - EVM_EMACS=emacs-git-snapshot-travis
+
 before_install:
-  - sudo add-apt-repository -y ppa:cassou/emacs
-  - sudo add-apt-repository -y ppa:ubuntu-elisp/ppa
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq $EMACS
-  - curl -fsSkL https://raw.github.com/cask/cask/master/go | python
-  - export PATH="$HOME/.cask/bin:$PATH"
-  - export ECUKES_EMACS="$EMACS"
+  - curl -fsSkL https://gist.github.com/rejeep/ebcd57c3af83b049833b/raw > x.sh && source ./x.sh
+  - evm install $EVM_EMACS --use --skip
+  - export UNDERCOVER_SEND_REPORT=1
   - cask
+
 script:
-  cask exec ecukes --no-win -r magnars
+  - cask exec ecukes --no-win -r magnars
