@@ -209,7 +209,8 @@ If enabled, \"C.M\" to match with module \"Control.Monad\", etc."
   "Display documentation in the docbuffer for the given CANDIDATE."
   (with-temp-buffer
     (let* ((mod (company-ghc--pget candidate :module))
-          (command (concat company-ghc-hoogle-command " --info " (if mod (concat candidate " +" mod) candidate))))
+           (searchExpr (shell-quote-argument (if mod (concat candidate " +" mod) candidate)))
+           (command (concat company-ghc-hoogle-command " --info " searchExpr)))
       (call-process-shell-command command nil t nil))
     (company-doc-buffer
      (buffer-substring-no-properties (point-min) (point-max)))))
