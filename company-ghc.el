@@ -209,7 +209,13 @@ If enabled, \"C.M\" to match with module \"Control.Monad\", etc."
   "Display documentation in the docbuffer for the given CANDIDATE."
   (with-temp-buffer
     (let* ((mod (company-ghc--pget candidate :module))
-           (search-expr (shell-quote-argument (if mod (concat candidate " +" mod) candidate)))
+           (candtype (company-ghc--pget candidate :candtype))
+           (search-expr (shell-quote-argument
+                         (apply #'concat
+                                (if (eq candtype 'operator)
+                                    (format "(%s)" candidate)
+                                  candidate)
+                                (when mod (list " +" mod)))))
            (command (concat company-ghc-hoogle-command " --info " search-expr)))
       (call-process-shell-command command nil t nil))
     (company-doc-buffer
@@ -360,17 +366,17 @@ If the line is less offset than OFFSET, it finishes the search."
   "Propertize CANDIDATE according to its string format and given PROPS."
   (let ((len (length candidate))
         (case-fold-search nil)
-        knd)
+        candtype)
     (cond
      ((and (> len 2) (eq (string-to-char candidate) ?\())
       (setq candidate (substring candidate 1 (- len 1)))
-      (setq knd 'operator))
+      (setq candtype 'operator))
      ((string-match-p "^[[:upper:]]" candidate)
-      (setq knd 'constructor))
+      (setq candtype 'constructor))
      (t
-      (setq knd 'identifier)))
+      (setq candtype 'identifier)))
     (apply #'add-text-properties
-           0 1 (append (list :kind knd) props) (list candidate))
+           0 1 (append (list :candtype candtype) props) (list candidate))
     candidate))
 
 (defun company-ghc--grab-name ()
