@@ -638,10 +638,13 @@ When called interactively, QUERY is specified in minibuffer."
 (defun company-ghc--hoogle-candidates (query)
   "Provide hoogle search results for QUERY."
   (with-temp-buffer
-    (call-process company-ghc-hoogle-command nil t nil
-                  "search"
-                  "-n" (number-to-string company-ghc-hoogle-search-limit)
-                  query)
+    (call-process-shell-command
+     (concat company-ghc-hoogle-command
+             " -n "
+             (number-to-string company-ghc-hoogle-search-limit)
+             " "
+             (shell-quote-argument query))
+     nil t nil)
     (company-ghc--hoogle-parse-results)))
 
 (defun company-ghc--hoogle-parse-results ()
