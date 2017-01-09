@@ -216,7 +216,8 @@ check ghc-mod configuration (Ref. `ghc-mod manual`_) or whether ``ghc-mod boot``
 
 If some module is not in the table, it is possibly bug of company-ghc.
 
-If number of candidates is 0 or nil, it might be problem related to ``ghc-mod``.
+Number of candidates is nil initially, and gets filled when completion for the corresponding module is performed.
+If number of candidates is 0 or nil after completion, it might be problem related to ``ghc-mod``.
 Try again with setting ``ghc-debug`` to ``t`` and see if there is any error in ``*GHC Debug*`` buffer.
 
 
