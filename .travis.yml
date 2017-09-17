@@ -7,11 +7,11 @@ env:
   - EVM_EMACS=emacs-25.2-travis
 
 before_install:
-  - export PATH="/home/travis/.evm/bin:$PATH"
-  - export PATH="/home/travis/.cask/bin:$PATH"
+  - export PATH="$HOME/.evm/bin:$HOME/.cask/bin:$PATH"
   - git clone https://github.com/rejeep/evm.git /home/travis/.evm
   - evm config path /tmp
   - evm install $EVM_EMACS --use
+  - export EMACS=$(which emacs)
   - curl -fsSkL https://raw.github.com/cask/cask/master/go | python
 
 install:
