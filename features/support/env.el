@@ -13,8 +13,7 @@
 
 (require 'ert)
 (require 'espuds)
-(require 'haskell-mode)
-(require 'haskell-font-lock)
+(require 'haskell)
 (require 'company-ghc)
 
 (defvar company-ghc-test-prefix-output)
