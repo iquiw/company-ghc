@@ -150,10 +150,10 @@ If enabled, \"C.M\" to match with module \"Control.Monad\", etc."
     (cond
      ((nth 3 ppss) 'stop)
      ((nth 4 ppss)
-      (if (looking-back company-ghc-pragma-regexp)
+      (if (looking-back company-ghc-pragma-regexp nil)
           (match-string-no-properties 1)
         (company-grab "[[:space:],]\\([^[:space:]]*\\>\\|\\)" 1)))
-     ((looking-back "^[^[:space:]]*") nil)
+     ((looking-back "^[^[:space:]]*" nil) nil)
      ((let ((case-fold-search nil))
         (and (save-excursion
                (forward-line 0)
