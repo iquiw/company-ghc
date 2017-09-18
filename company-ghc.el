@@ -1,6 +1,6 @@
 ;;; company-ghc.el --- company-mode ghc-mod backend -*- lexical-binding: t -*-
 
-;; Copyright (C) 2014-2016 by Iku Iwasa
+;; Copyright (C) 2014-2017 by Iku Iwasa
 
 ;; Author:    Iku Iwasa <iku.iwasa@gmail.com>
 ;; URL:       https://github.com/iquiw/company-ghc
